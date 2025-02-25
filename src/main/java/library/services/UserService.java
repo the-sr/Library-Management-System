@@ -2,6 +2,7 @@ package library.services;
 
 import java.util.List;
 
+import library.dto.OTPDto;
 import library.dto.PasswordDto;
 import library.dto.UserDto;
 import library.dto.PageWiseResDto;
@@ -9,6 +10,8 @@ import library.dto.PageWiseResDto;
 public interface UserService {
 
     String save(UserDto req);
+
+    String validateSignupOTP(OTPDto req);
 
     UserDto findById(long id);
 
@@ -20,9 +23,9 @@ public interface UserService {
 
     UserDto updateById(UserDto req);
 
-    String forgotPassword(PasswordDto req);
+    String forgotPassword(OTPDto req);
 
-    PasswordDto validateOTP(PasswordDto req);
+    OTPDto validateOTP(OTPDto req);
 
     String resetPassword(PasswordDto req);
 

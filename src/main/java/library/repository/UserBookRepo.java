@@ -6,6 +6,8 @@ import org.springframework.stereotype.Repository;
 
 import library.models.UserBook;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,5 +25,7 @@ public interface UserBookRepo extends JpaRepository<UserBook, Long> {
             "  and case when :requestType is not null then ub.request_type = :requestType else true end " +
             "  and case when :isActive is not null then ub.is_active = :isActive else true end ",nativeQuery = true)
     List<UserBook> findAll(Long userId, String requestType, Boolean isActive);
+
+    List<UserBook> findAllByExpectedReturnDateBefore(LocalDate expectedReturnDate);
 
 }

@@ -7,9 +7,9 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PasswordDto {
-    private String oldPassword;
-    private String newPassword;
+
+public class OTPDto {
+    private int OTP;
     private String email;
     private String token;
 }

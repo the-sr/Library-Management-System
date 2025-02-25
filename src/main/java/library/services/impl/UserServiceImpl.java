@@ -1,5 +1,6 @@
 package library.services.impl;
 
+import library.dto.OTPDto;
 import library.dto.PasswordDto;
 import library.services.AddressService;
 import lombok.RequiredArgsConstructor;
@@ -69,6 +70,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public String validateSignupOTP(OTPDto req) {
+        if (optMap.containsKey(req.getEmail())) {
+            if (optMap.get(req.getEmail()).equals(req.getOTP()))
+                return "Your account has been verified";
+            else throw new CustomException("Invalid OTP", HttpStatus.BAD_REQUEST);
+        } else throw new CustomException("Invalid request", HttpStatus.BAD_REQUEST);
+    }
+
+    @Override
     public UserDto findById(long id) {
         User user = userRepo.findById(id).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
         return userMapper.entityToDto(user);
@@ -113,7 +123,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String forgotPassword(PasswordDto req) {
+    public String forgotPassword(OTPDto req) {
         if (userRepo.existsByEmail(req.getEmail())) {
             int otp = (int) (Math.pow(10, Integer.parseInt(optLength) - 1) + Math.random() * 9 * Math.pow(10, Integer.parseInt(optLength) - 1));
             optMap.put(req.getEmail(), otp);
@@ -124,12 +134,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PasswordDto validateOTP(PasswordDto req) {
+    public OTPDto validateOTP(OTPDto req) {
         if (optMap.containsKey(req.getEmail())) {
-            if (optMap.get(req.getEmail()).equals(req.getOtp())) {
+            if (optMap.get(req.getEmail()).equals(req.getOTP())) {
                 String token = "just_a_random_token";
                 tokenMap.put(req.getEmail(), token);
-                return PasswordDto.builder().token(token).build();
+                return OTPDto.builder().token(token).build();
             } else throw new CustomException("Invalid OTP", HttpStatus.BAD_REQUEST);
         } else throw new CustomException("Invalid request", HttpStatus.BAD_REQUEST);
     }

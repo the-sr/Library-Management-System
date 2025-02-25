@@ -3,6 +3,7 @@ package library.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import library.config.jwt.JwtUtil;
+import library.dto.OTPDto;
 import library.dto.PasswordDto;
 import library.dto.UserDto;
 import library.dto.LoginDto;
@@ -34,6 +35,11 @@ public class PublicController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(req));
     }
 
+    @PostMapping("/validate-signup-otp")
+    public ResponseEntity<?> validateSignUpOTP(@RequestBody OTPDto req) {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.validateSignupOTP(req));
+    }
+
     @PostMapping("/sign-in")
     public ResponseEntity<?> login(@RequestBody LoginDto req) {
         Authentication authentication = authenticationManager.authenticate(
@@ -45,12 +51,12 @@ public class PublicController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody PasswordDto req){
+    public ResponseEntity<?> forgotPassword(@RequestBody OTPDto req){
         return ResponseEntity.ok().body(userService.forgotPassword(req));
     }
 
     @PostMapping("/validate-otp")
-    public ResponseEntity<?> validateOTP(@RequestBody PasswordDto req){
+    public ResponseEntity<?> validateOTP(@RequestBody OTPDto req){
         return ResponseEntity.ok().body(userService.validateOTP(req));
     }
 
