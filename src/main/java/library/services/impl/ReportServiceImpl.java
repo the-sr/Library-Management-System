@@ -25,9 +25,9 @@ public class ReportServiceImpl implements ReportService {
 
             //styles
             JRDesignStyle titleStyle = createStyle("Times New Roman", 12f, true, false, false, HorizontalTextAlignEnum.CENTER, VerticalTextAlignEnum.JUSTIFIED, Color.BLACK, Color.WHITE);
+            design.addStyle(titleStyle);
             JRDesignStyle normalStyle = createStyle("Times New Roman", 12f, false, false, false, HorizontalTextAlignEnum.JUSTIFIED, VerticalTextAlignEnum.JUSTIFIED, Color.BLACK, Color.WHITE);
-            design.addStyle(1,titleStyle);
-            design.addStyle(2,normalStyle);
+            design.addStyle(normalStyle);
 
             LibraryReportDto dto = new LibraryReportDto();
 
@@ -46,6 +46,7 @@ public class ReportServiceImpl implements ReportService {
 
             //titleBand
             JRDesignBand titleBand=createBand(design,titleStyle,null,dto);
+            design.setTitle(titleBand);
 
 
         }catch (Exception e){
