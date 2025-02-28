@@ -105,7 +105,7 @@ public class ReportServiceImpl implements ReportService {
 
         if(dto.getTitles()!=null && !dto.getTitles().isEmpty()){
             dto.getTitles().forEach(title->{
-                JRDesignStaticText text=createStaticText(0, y.getAndAdd((int) (titleStyle.getFontSize()+5)),titleStyle);
+                JRDesignStaticText text=createStaticText(0, y.getAndAdd((int) (titleStyle.getFontSize()+5)),design.getColumnWidth(),titleStyle);
                 text.setText(title);
                 band.addElement(text);
             });
@@ -115,10 +115,11 @@ public class ReportServiceImpl implements ReportService {
         return  band;
     }
 
-    private JRDesignStaticText createStaticText(int x, int y, JRDesignStyle style){
+    private JRDesignStaticText createStaticText(int x, int y, int width, JRDesignStyle style){
         JRDesignStaticText text=new JRDesignStaticText();
         text.setX(x);
         text.setY(y);
+        text.setWidth(width);
         text.setStyle(style);
         return text;
     }
