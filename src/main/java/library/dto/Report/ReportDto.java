@@ -11,6 +11,8 @@ import java.util.Set;
 public class ReportDto {
     String query;
     Set<String> titles = new LinkedHashSet<>();
+    Set<String> subtitles = new LinkedHashSet<>();
+    Map<String, Object> titleDetails=new LinkedHashMap<>();
     Map<String, Object> leftSideHeaderFields = new LinkedHashMap<>();
     Map<String, Object> rightSideHeaderFields = new LinkedHashMap<>();
 
