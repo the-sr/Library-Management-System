@@ -88,7 +88,7 @@ public class ReportServiceImpl implements ReportService {
             design.addStyle(normalStyle);
 
             //fields
-            createField(design,dto.getFields());
+            createField(design,dto.getLeftSideHeaderFields());
 
             //titleBand
             JRDesignBand titleBand=createTitleBand(design,titleStyle,titleStyle,dto);
