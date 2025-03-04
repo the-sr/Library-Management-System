@@ -2,16 +2,15 @@ package library.services;
 
 import java.util.List;
 
-import library.dto.OTPDto;
-import library.dto.PasswordDto;
-import library.dto.UserDto;
-import library.dto.PageWiseResDto;
+import library.dto.*;
 
 public interface UserService {
 
     String save(UserDto req);
 
     String validateSignupOTP(OTPDto req);
+
+    LoginDto login(LoginDto req);
 
     UserDto findById(long id);
 

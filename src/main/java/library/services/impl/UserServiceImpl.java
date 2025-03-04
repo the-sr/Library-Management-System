@@ -1,8 +1,9 @@
 package library.services.impl;
 
-import library.dto.OTPDto;
-import library.dto.PasswordDto;
+import library.config.jwt.JwtUtil;
+import library.dto.*;
 import library.services.AddressService;
+import library.services.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,11 +12,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import library.dto.UserDto;
-import library.dto.PageWiseResDto;
 import library.exception.CustomException;
 import library.models.User;
 import library.repository.UserRepo;
@@ -36,6 +41,10 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final AddressService addressService;
     private final EmailService emailService;
+    private final FileService fileService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
 
     @Value("${otp-length}")
     private String optLength;
@@ -45,7 +54,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String save(UserDto req) {
-        if (userRepo.existsByEmail(req.getEmail()))
+        if (userRepo.findByEmail(req.getEmail()).isPresent())
             throw new CustomException("Email already registered", HttpStatus.BAD_REQUEST);
         if (!req.getPassword().equals(req.getConfirmPassword()))
             throw new CustomException("Confirm Password and Password must be same", HttpStatus.BAD_REQUEST);
@@ -59,10 +68,13 @@ public class UserServiceImpl implements UserService {
                     "</br>If you didn't request this, please ignore this email.";
             emailService.sendMail(req.getEmail(), "Verify your Account", body);
         }).start();
-        User user = userRepo.save(userMapper.dtoToEntity(req));
+        User user=userMapper.dtoToEntity(req);
+        user.setProfilePicture(fileService.saveFile(req.getProfilePicture()));
+        user = userRepo.save(user);
+        long userId = user.getId();
         if (req.getAddress() != null) {
             req.getAddress().parallelStream().forEach(address -> {
-                address.setUserId(user.getId());
+                address.setUserId(userId);
                 addressService.saveAddress(address);
             });
         }
@@ -72,10 +84,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public String validateSignupOTP(OTPDto req) {
         if (optMap.containsKey(req.getEmail())) {
-            if (optMap.get(req.getEmail()).equals(req.getOTP()))
+            if (optMap.get(req.getEmail()).equals(req.getOTP())) {
+                User user=userRepo.findByEmail(req.getEmail()).orElseThrow(()->new CustomException("User not Found",HttpStatus.NO_CONTENT));
+                user.setIsActive(true);
+                userRepo.save(user);
                 return "Your account has been verified";
-            else throw new CustomException("Invalid OTP", HttpStatus.BAD_REQUEST);
+            }else throw new CustomException("Invalid OTP", HttpStatus.BAD_REQUEST);
         } else throw new CustomException("Invalid request", HttpStatus.BAD_REQUEST);
+    }
+
+    @Override
+    public LoginDto login(LoginDto req) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(req.getUsername());
+        final String token = jwtUtil.generateToken(userDetails);
+        return LoginDto.builder().token(token).build();
     }
 
     @Override
@@ -114,7 +139,7 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(req.getFirstName());
         user.setMiddleName(req.getMiddleName());
         user.setLastName(req.getLastName());
-        if (userRepo.existsByEmail(req.getEmail()))
+        if (userRepo.findByEmail(req.getEmail()).isPresent())
             throw new CustomException("Email already registered", HttpStatus.BAD_REQUEST);
         user.setEmail(req.getEmail());
         user.setPhone(req.getPhone());
@@ -124,7 +149,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String forgotPassword(OTPDto req) {
-        if (userRepo.existsByEmail(req.getEmail())) {
+        if (userRepo.findByEmail(req.getEmail()).isPresent()) {
             int otp = (int) (Math.pow(10, Integer.parseInt(optLength) - 1) + Math.random() * 9 * Math.pow(10, Integer.parseInt(optLength) - 1));
             optMap.put(req.getEmail(), otp);
             String body = "Your one-time password (OTP) for resetting your password is <b>" + otp + "</b>. This code will expire in 5 minutes. Please enter it promptly to complete your request.";

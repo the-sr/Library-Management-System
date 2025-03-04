@@ -17,7 +17,7 @@ public interface UserRepo extends JpaRepository<User, Long> {
     @Query(value = "select coalesce(max(id),0)+1 from users ", nativeQuery = true)
     Long findNextId();
 
-    Boolean existsByEmail(String email);
+    Optional<User> findByEmail(String email);
 
     @Query(value = "SELECT * FROM users u WHERE CASE WHEN :status IS NOT NULL THEN u.is_active = :status ELSE TRUE END", nativeQuery = true)
     List<User> findAllByIsActive(Boolean status);
