@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotEmpty;
 import library.enums.Role;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,6 +34,8 @@ public class UserDto {
     private String password;
 
     private String confirmPassword;
+
+    private MultipartFile profilePicture;
 
     private Role role;
 

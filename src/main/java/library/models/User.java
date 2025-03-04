@@ -36,6 +36,9 @@ public class User {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "profile_picture")
+    private String profilePicture;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Role role;
@@ -60,7 +63,7 @@ public class User {
 
     @PrePersist
     private void onCreate() {
-        isActive = true;
+        isActive = false;
         createdDate= LocalDate.now();
         borrowedBookCount=0;
     }
