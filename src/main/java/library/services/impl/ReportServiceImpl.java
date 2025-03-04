@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.design.*;
 import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
+import net.sf.jasperreports.engine.type.ScaleImageEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -251,6 +252,17 @@ public class ReportServiceImpl implements ReportService {
         line.setHeight(height);
         return line;
     }
+
+    private JRDesignImage createImage(JasperDesign design,int x, int y, int width, int height, ScaleImageEnum imageScale){
+        JRDesignImage image=new JRDesignImage(design);
+        image.setX(x);
+        image.setY(y);
+        image.setWidth(width);
+        image.setHeight(height);
+        image.setScaleImage(imageScale);
+        return image;
+    }
+
 
     private void createField(JasperDesign design, Map<String,Object> fieldsMap){
         if(fieldsMap!=null && !fieldsMap.isEmpty()){
