@@ -26,6 +26,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         List<GrantedAuthority> authorities = Collections
                 .singletonList(new SimpleGrantedAuthority(user.getRole().name()));
         return new AuthenticatedUser(user.getId(), user.getEmail(), user.getPassword(),
-                authorities);
+                authorities, user.getIsActive());
     }
 }

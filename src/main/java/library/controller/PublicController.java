@@ -25,9 +25,9 @@ public class PublicController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(req));
     }
 
-    @PostMapping("/validate-signup-otp")
-    public ResponseEntity<?> validateSignUpOTP(@RequestBody OTPDto req) {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.validateSignupOTP(req));
+    @PostMapping("/activate-account")
+    public ResponseEntity<?> activateAccount(@RequestBody OTPDto req) {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.activateAccount(req));
     }
 
     @PostMapping("/sign-in")

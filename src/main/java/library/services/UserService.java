@@ -8,7 +8,7 @@ public interface UserService {
 
     String save(UserDto req);
 
-    String validateSignupOTP(OTPDto req);
+    String activateAccount(OTPDto req);
 
     LoginDto login(LoginDto req);
 

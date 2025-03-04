@@ -17,6 +17,7 @@ public class AuthenticatedUser implements UserDetails {
     private final String username;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
+    private final boolean isActive;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

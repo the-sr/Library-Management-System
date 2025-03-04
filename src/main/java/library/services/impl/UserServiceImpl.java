@@ -1,6 +1,7 @@
 package library.services.impl;
 
 import library.config.jwt.JwtUtil;
+import library.config.security.AuthenticatedUser;
 import library.dto.*;
 import library.services.AddressService;
 import library.services.FileService;
@@ -16,7 +17,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -82,7 +82,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String validateSignupOTP(OTPDto req) {
+    public String activateAccount(OTPDto req) {
         if (optMap.containsKey(req.getEmail())) {
             if (optMap.get(req.getEmail()).equals(req.getOTP())) {
                 User user=userRepo.findByEmail(req.getEmail()).orElseThrow(()->new CustomException("User not Found",HttpStatus.NO_CONTENT));
@@ -98,9 +98,17 @@ public class UserServiceImpl implements UserService {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(req.getUsername());
-        final String token = jwtUtil.generateToken(userDetails);
-        return LoginDto.builder().token(token).build();
+        final AuthenticatedUser userDetails = (AuthenticatedUser) userDetailsService.loadUserByUsername(req.getUsername());
+        if (userDetails.isActive()) {
+            final String token = jwtUtil.generateToken(userDetails);
+            return LoginDto.builder().token(token).build();
+        } else {
+            int otp = (int) (Math.pow(10, Integer.parseInt(optLength) - 1) + Math.random() * 9 * Math.pow(10, Integer.parseInt(optLength) - 1));
+            optMap.put(userDetails.getUsername(), otp);
+            String body = "Your one-time password (OTP) for activating your account is <b>" + otp + "</b>. This code will expire in 5 minutes. Please enter it promptly to complete your request.";
+            emailService.sendMail(userDetails.getUsername(), "Account activation Request", body);
+            throw new CustomException("Please check your email for OTP to activate your account", HttpStatus.OK);
+        }
     }
 
     @Override
