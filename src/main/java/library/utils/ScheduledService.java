@@ -4,33 +4,45 @@ import library.models.Book;
 import library.models.User;
 import library.models.UserBook;
 import library.repository.UserBookRepo;
+import library.repository.UserRepo;
 import library.services.impl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ScheduledService {
 
     private final UserBookRepo userBookRepo;
     private final EmailService emailService;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final UserRepo userRepo;
 
     @Scheduled(cron = "0 5 * * * *")    //runs every 5 minutes
     private void clearOTPMap(){
         UserServiceImpl.clearOTPMap();
+        log.info("OTP map cleared");
     }
 
     @Scheduled(cron = "0 0 0 * * *")    //runs at 12 am everyday
     private void clearTokenMap(){
         UserServiceImpl.clearTokenMap();
+        log.info("Token map cleared");
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")    //runs at 12 am everyday
+    private void deleteInActiveAccounts(){
+        List<User> userList=userRepo.findAllByIsActiveAndUpdatedDateBefore(false,LocalDate.now().minusMonths(1));
+        if(userList!=null && !userList.isEmpty())
+            userRepo.deleteAll(userList);
+        log.info("Inactive accounts deleted");
     }
 
     @Scheduled(cron = "0 0 0 * * *")    //runs at 12 am everyday

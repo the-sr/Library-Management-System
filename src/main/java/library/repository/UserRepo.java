@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import library.models.User;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,4 +28,6 @@ public interface UserRepo extends JpaRepository<User, Long> {
 
     @Query(value = "select * from users u WHERE CASE WHEN :status IS NOT NULL THEN u.is_active = :status ELSE TRUE END", nativeQuery = true)
     Page<User> findAllPagewiseByIsActive(Pageable pageable, Boolean status);
+
+    List<User> findAllByIsActiveAndUpdatedDateBefore(Boolean status, LocalDate updatedDate);
 }

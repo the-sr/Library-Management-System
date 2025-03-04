@@ -48,7 +48,6 @@ public class UserServiceImpl implements UserService {
 
     @Value("${otp-length}")
     private String optLength;
-
     private static Map<String, Integer> optMap = new HashMap<>();
     private static Map<String, String> tokenMap = new HashMap<>();
 
@@ -69,7 +68,8 @@ public class UserServiceImpl implements UserService {
             emailService.sendMail(req.getEmail(), "Verify your Account", body);
         }).start();
         User user=userMapper.dtoToEntity(req);
-        user.setProfilePicture(fileService.saveFile(req.getProfilePicture()));
+        if(req.getProfilePicture()!=null)
+            user.setProfilePicture(fileService.saveFile(req.getProfilePicture()));
         user = userRepo.save(user);
         long userId = user.getId();
         if (req.getAddress() != null) {
