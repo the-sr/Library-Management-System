@@ -6,11 +6,11 @@ import library.dto.*;
 
 public interface UserService {
 
-    String save(UserDto req);
+    String signUp(UserDto req);
 
     String activateAccount(OTPDto req);
 
-    LoginDto login(LoginDto req);
+    LoginDto signIn(LoginDto req);
 
     UserDto findById(long id);
 

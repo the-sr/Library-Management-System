@@ -21,8 +21,8 @@ public class PublicController {
 
     @Operation(summary = "Sign Up and Registration")
     @PostMapping("/sign-up")
-    public ResponseEntity<?> save(@Valid @ModelAttribute UserDto req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(req));
+    public ResponseEntity<?> signUp(@Valid @ModelAttribute UserDto req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.signUp(req));
     }
 
     @PostMapping("/activate-account")
@@ -31,8 +31,8 @@ public class PublicController {
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<?> login(@RequestBody LoginDto req) {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.login(req));
+    public ResponseEntity<?> signIn(@RequestBody LoginDto req) {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.signIn(req));
     }
 
     @PostMapping("/forgot-password")
