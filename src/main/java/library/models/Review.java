@@ -39,7 +39,7 @@ public class Review {
     @Column(name = "reviews_id")
     private Long reviewsId;
 
-    @Getter(AccessLevel.NONE)
+//    @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id",referencedColumnName = "id",insertable = false,updatable = false)

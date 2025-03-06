@@ -37,6 +37,8 @@ public class UserDto {
 
     private MultipartFile profilePicture;
 
+    private String profilePicturePath;
+
     private Role role;
 
     private String phone;

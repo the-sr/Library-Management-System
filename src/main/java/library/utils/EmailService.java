@@ -90,9 +90,9 @@ public class EmailService {
             message.setSentDate(new Date());
             Transport.send(message);
             status = true;
-            log.info("Email sent successfully to "+ receiver);
+            log.info("Email sent successfully to {}", receiver);
         } catch (Exception e) {
-            log.error("Error sending email "+ e.getMessage());
+            log.error("Error sending email {}", e.getMessage());
             status = false;
         }
         return status;

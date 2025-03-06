@@ -48,8 +48,8 @@ public class UserServiceImpl implements UserService {
 
     @Value("${otp-length}")
     private String optLength;
-    private static Map<String, Integer> otpMap = new HashMap<>();
-    private static Map<String, String> tokenMap = new HashMap<>();
+    private static final Map<String, Integer> otpMap = new HashMap<>();
+    private static final Map<String, String> tokenMap = new HashMap<>();
 
     @Override
     public String signUp(UserDto req) {
@@ -124,20 +124,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public PageWiseResDto<UserDto> getAllUsers(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection, Boolean status) {
-        Sort sort = null;
-        if (sortDirection.equalsIgnoreCase("asc")) sort = Sort.by(sortBy).ascending();
-        else if (sortDirection.equalsIgnoreCase("desc")) sort = Sort.by(sortBy).descending();
+        Sort sort;
+        if (sortDirection.equalsIgnoreCase("desc")) sort = Sort.by(sortBy).descending();
+        else sort = Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
         Page<User> users = userRepo.findAllPagewiseByIsActive(pageable, status);
         List<UserDto> res = users.stream().map(userMapper::entityToDto).collect(Collectors.toList());
-        PageWiseResDto<UserDto> pageWiseResDto = new PageWiseResDto<>();
-        pageWiseResDto.setRes(res);
-        pageWiseResDto.setTotalPages(users.getTotalPages());
-        pageWiseResDto.setTotalElements(users.getTotalElements());
-        pageWiseResDto.setCurrentPage(users.getNumber());
-        pageWiseResDto.setPageSize(users.getSize());
-        pageWiseResDto.setLast(users.isLast());
-        return pageWiseResDto;
+        return PageWiseResDto.<UserDto>builder()
+                .res(res)
+                .totalPages(users.getTotalPages())
+                .totalElements(users.getTotalElements())
+                .currentPage(users.getNumber())
+                .pageSize(users.getSize())
+                .isLast(users.isLast())
+                .build();
     }
 
     @Override

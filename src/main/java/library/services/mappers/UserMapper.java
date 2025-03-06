@@ -14,10 +14,13 @@ public interface UserMapper extends MapperInterface<User, UserDto> {
 
     @Mapping(target = "password", qualifiedByName = "encodePassword")
     @Mapping(target = "role", qualifiedByName = "setRoles")
+    @Mapping(target = "profilePicture", ignore = true)
     User dtoToEntity(UserDto userDto);
 
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "confirmPassword", ignore = true)
+    @Mapping(target = "profilePicture",ignore = true)
+    @Mapping(target = "profilePicturePath", source = "profilePicture")
     UserDto entityToDto(User user);
 
     @Named("encodePassword")
@@ -27,9 +30,6 @@ public interface UserMapper extends MapperInterface<User, UserDto> {
 
     @Named("setRoles")
     default Role setRoles(Role role) {
-        if (role != null)
-            return role;
-        else
-            return Role.MEMBER;
+       return (role!=null)? role: Role.MEMBER;
     }
 }
