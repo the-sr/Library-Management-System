@@ -4,6 +4,7 @@ import library.enums.ReportFormat;
 import library.services.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,12 +17,14 @@ public class ReportController {
 
     private final ReportService reportService;
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("library")
     public ResponseEntity<?> getLibraryReport(@RequestParam ReportFormat reportFormat) {
         reportService.generateLibraryReport(reportFormat);
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("user")
     public ResponseEntity<?> getUserReport(@RequestParam long userId, @RequestParam ReportFormat reportFormat) {
         reportService.generateUserReport(reportFormat,userId);

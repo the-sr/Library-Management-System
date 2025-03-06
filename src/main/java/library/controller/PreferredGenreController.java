@@ -16,11 +16,13 @@ public class PreferredGenreController {
 
     private final PreferredGenreService preferredGenreService;
 
+    @PreAuthorize("hasAuthority('MEMBER')")
     @PostMapping("/add-preferred-genre")
     public ResponseEntity<?> addPreferredGenre(@RequestBody List<GenreDto> req) {
         return ResponseEntity.ok(preferredGenreService.addPreferredGenre(req));
     }
 
+    @PreAuthorize("hasAuthority('MEMBER')")
     @GetMapping("/preferred-genre")
     public ResponseEntity<?> getPreferredGenres(@RequestParam long userId) {
         return ResponseEntity.ok(preferredGenreService.getPreferredGenres(userId));

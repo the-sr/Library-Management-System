@@ -4,6 +4,7 @@ import library.dto.ReviewDto;
 import library.services.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,6 +14,7 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
+    @PreAuthorize("hasAuthority('MEMBER')")
     @PostMapping("/add-review")
     public ResponseEntity<?> addReview(@RequestBody ReviewDto req){
         return ResponseEntity.ok(reviewService.addReview(req));
@@ -33,6 +35,7 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.updateReview(req));
     }
 
+    @PreAuthorize("hasAuthority('MEMBER')")
     @DeleteMapping("/review/{id}")
     public ResponseEntity<?> deleteReview(@PathVariable long id){
         return ResponseEntity.ok(reviewService.deleteReview(id));

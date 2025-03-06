@@ -9,6 +9,7 @@ import library.utils.AppConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,12 +26,14 @@ public class UserRestController {
     }
 
     @Operation(summary = "Get all users")
+    @PreAuthorize("hasAnyAuthority('ADMIN','LIBRARIAN')")
     @GetMapping("/users")
     public ResponseEntity<?> getUsers(@RequestParam(required = false) Boolean status) {
         return ResponseEntity.ok().body(userService.getAllUsers(status));
     }
 
     @Operation(summary = "Get all users page wise")
+    @PreAuthorize("hasAnyAuthority('ADMIN','LIBRARIAN')")
     @GetMapping("/page-wise-users")
     public ResponseEntity<?> getUsersPagewise(
             @RequestParam("pageNumber") Integer pageNumber,
