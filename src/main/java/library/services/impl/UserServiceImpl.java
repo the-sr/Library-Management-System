@@ -58,8 +58,7 @@ public class UserServiceImpl implements UserService {
         if (!req.getPassword().equals(req.getConfirmPassword()))
             throw new CustomException("Confirm Password and Password must be same", HttpStatus.BAD_REQUEST);
         new Thread(()->{
-            int otp = (int) (Math.pow(10, Integer.parseInt(optLength) - 1) + Math.random() * 9 * Math.pow(10, Integer.parseInt(optLength) - 1));
-            otpMap.put(req.getEmail(), otp);
+            int otp = getOtp(req.getEmail());
             String body="<b>Dear "+req.getFirstName()+",</b></br>" +
                     "</br><b>Hello and Welcome !</b></br></br>" +
                     "</br>To complete your account verification, please use the One-Time Password (OTP) below:</br></br><b>Your OTP: "+otp+ "</b></br>" +
@@ -104,8 +103,7 @@ public class UserServiceImpl implements UserService {
             final String token = jwtUtil.generateToken(userDetails);
             return LoginDto.builder().token(token).build();
         } else {
-            int otp = (int) (Math.pow(10, Integer.parseInt(optLength) - 1) + Math.random() * 9 * Math.pow(10, Integer.parseInt(optLength) - 1));
-            otpMap.put(userDetails.getUsername(), otp);
+            int otp = getOtp(userDetails.getUsername());
             String body = "Your one-time password (OTP) for activating your account is <b>" + otp + "</b>. This code will expire in 5 minutes. Please enter it promptly to complete your request.";
             emailService.sendMail(userDetails.getUsername(), "Account activation Request", body);
             throw new CustomException("Please check your email for OTP to activate your account", HttpStatus.FORBIDDEN);
@@ -159,7 +157,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public String forgotPassword(OTPDto req) {
         if (userRepo.findByEmail(req.getEmail()).isPresent()) {
-            int otp = (int) (Math.pow(10, Integer.parseInt(optLength) - 1) + Math.random() * 9 * Math.pow(10, Integer.parseInt(optLength) - 1));
+            int otp = getOtp(req.getEmail());
             otpMap.put(req.getEmail(), otp);
             String body = "Your one-time password (OTP) for resetting your password is <b>" + otp + "</b>. This code will expire in 5 minutes. Please enter it promptly to complete your request.";
             emailService.sendMail(req.getEmail(), "Forgot Password Request", body);
@@ -222,5 +220,11 @@ public class UserServiceImpl implements UserService {
     public static void clearTokenMap() {
         tokenMap.clear();
         log.info("Token map cleared");
+    }
+
+    private int getOtp(String email) {
+        int otp = (int) (Math.pow(10, Integer.parseInt(optLength) - 1) + Math.random() * 9 * Math.pow(10, Integer.parseInt(optLength) - 1));
+        otpMap.put(email, otp);
+        return otp;
     }
 }
