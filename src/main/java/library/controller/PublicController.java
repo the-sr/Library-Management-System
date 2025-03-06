@@ -1,6 +1,8 @@
 package library.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import library.dto.OTPDto;
 import library.dto.PasswordDto;
@@ -19,10 +21,18 @@ public class PublicController {
 
     private final UserService userService;
 
-    @Operation(summary = "Sign Up and Registration")
+    @Operation(
+            summary = "Sign Up and Registration",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(
+                            mediaType = "multipart/form-data",
+                            schema = @Schema(implementation = UserDto.class)
+                    )
+            )
+    )
     @PostMapping("/sign-up")
     public ResponseEntity<?> signUp(@Valid @ModelAttribute UserDto req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.signUp(req));
+        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
     }
 
     @PostMapping("/activate-account")
