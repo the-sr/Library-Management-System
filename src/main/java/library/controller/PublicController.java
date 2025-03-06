@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/public")
@@ -21,18 +22,10 @@ public class PublicController {
 
     private final UserService userService;
 
-    @Operation(
-            summary = "Sign Up and Registration",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    content = @Content(
-                            mediaType = "multipart/form-data",
-                            schema = @Schema(implementation = UserDto.class)
-                    )
-            )
-    )
+
     @PostMapping("/sign-up")
-    public ResponseEntity<?> signUp(@Valid @ModelAttribute UserDto req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+    public ResponseEntity<?> signUp(@Valid @RequestBody UserDto req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.signUp(req));
     }
 
     @PostMapping("/activate-account")

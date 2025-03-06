@@ -35,9 +35,7 @@ public class UserDto {
 
     private String confirmPassword;
 
-    private MultipartFile profilePicture;
-
-    private String profilePicturePath;
+    private String profilePicture;
 
     private Role role;
 

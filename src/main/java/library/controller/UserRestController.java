@@ -8,9 +8,11 @@ import library.services.UserService;
 import library.utils.AppConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api")
@@ -18,6 +20,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserRestController {
 
     private final UserService userService;
+
+    @PostMapping(value = "/user/add-profile-picture",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> addProfilePicture(@RequestParam Long userId,@RequestPart MultipartFile profilePicture){
+        return ResponseEntity.ok().body(userService.addProfilePicture(userId,profilePicture));
+    }
 
     @Operation(summary = "Get user by ID")
     @GetMapping("/user/{id}")

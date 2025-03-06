@@ -3,6 +3,7 @@ package library.services;
 import java.util.List;
 
 import library.dto.*;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
 
@@ -11,6 +12,8 @@ public interface UserService {
     String activateAccount(OTPDto req);
 
     LoginDto signIn(LoginDto req);
+
+    String addProfilePicture(Long userId, MultipartFile profilePicture);
 
     UserDto findById(long id);
 

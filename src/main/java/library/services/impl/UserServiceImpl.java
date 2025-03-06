@@ -2,6 +2,7 @@ package library.services.impl;
 
 import library.config.jwt.JwtUtil;
 import library.config.security.AuthenticatedUser;
+import library.config.security.AuthenticationFacade;
 import library.dto.*;
 import library.services.AddressService;
 import library.services.FileService;
@@ -19,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import library.exception.CustomException;
@@ -27,6 +29,7 @@ import library.repository.UserRepo;
 import library.services.UserService;
 import library.services.mappers.UserMapper;
 import library.utils.EmailService;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -45,6 +48,8 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final AuthenticationFacade facade;
+    private final PasswordEncoder encoder;
 
     @Value("${otp-length}")
     private String optLength;
@@ -67,8 +72,6 @@ public class UserServiceImpl implements UserService {
             emailService.sendMail(req.getEmail(), "Verify your Account", body);
         }).start();
         User user=userMapper.dtoToEntity(req);
-        if(req.getProfilePicture()!=null)
-            user.setProfilePicture(fileService.saveFile(req.getProfilePicture()));
         user = userRepo.save(user);
         long userId = user.getId();
         if (req.getAddress() != null) {
@@ -108,6 +111,16 @@ public class UserServiceImpl implements UserService {
             emailService.sendMail(userDetails.getUsername(), "Account activation Request", body);
             throw new CustomException("Please check your email for OTP to activate your account", HttpStatus.FORBIDDEN);
         }
+    }
+
+    @Override
+    public String addProfilePicture(Long userId, MultipartFile profilePicture) {
+        String filename=fileService.saveFile(profilePicture);
+        return userRepo.findById(userId).map(u->{
+            u.setProfilePicture(filename);
+            userRepo.save(u);
+            return "Profile Picture Added";
+        }).orElseThrow(()->new CustomException("User Not Found",HttpStatus.NOT_FOUND));
     }
 
     @Override
@@ -193,13 +206,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public String updatePassword(PasswordDto req) {
         if (req.getOldPassword() != null && !req.getOldPassword().isEmpty()) {
-            User user = userRepo.findByUsername(req.getEmail()).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
-            if (new BCryptPasswordEncoder().matches(req.getOldPassword(), user.getPassword())) {
-                user.setPassword(new BCryptPasswordEncoder().encode(req.getNewPassword()));
-                userRepo.save(user);
-                return "Password changed successfully";
-            } else throw new CustomException("Incorrect old password", HttpStatus.BAD_REQUEST);
-        }else throw new CustomException("Invalid Request",HttpStatus.BAD_REQUEST);
+            long userId = facade.getAuthentication().getUserId();
+            return userRepo.findById(userId).map(u -> {
+                if (encoder.matches(req.getOldPassword(), u.getPassword())) {
+                    u.setPassword(encoder.encode(req.getNewPassword()));
+                    userRepo.save(u);
+                    return "Password successfully updated";
+                } else throw new CustomException("Incorrect old password", HttpStatus.BAD_REQUEST);
+            }).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+        } else throw new CustomException("Invalid Request", HttpStatus.BAD_REQUEST);
     }
 
     @Override
