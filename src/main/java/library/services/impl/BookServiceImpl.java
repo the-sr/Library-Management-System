@@ -131,11 +131,10 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public PageWiseResDto<BookDto> getAllBooks(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection) {
-        Sort sort = null;
-        if (sortDirection.equalsIgnoreCase("asc"))
-            sort = Sort.by(sortBy).ascending();
-        else if (sortDirection.equalsIgnoreCase("desc"))
+        Sort sort;
+        if (sortDirection.equalsIgnoreCase("desc"))
             sort = Sort.by(sortBy).descending();
+        else sort = Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
         Page<Book> books = bookRepo.findAll(pageable);
         List<BookDto> bookDtoList = new ArrayList<>();
@@ -145,14 +144,14 @@ public class BookServiceImpl implements BookService {
             bookDto.setGenre(getGenreDtoList(bookDto));
             bookDtoList.add(bookDto);
         });
-        PageWiseResDto<BookDto> pageWiseResDto = new PageWiseResDto<>();
-        pageWiseResDto.setRes(bookDtoList);
-        pageWiseResDto.setTotalPages(books.getTotalPages());
-        pageWiseResDto.setTotalElements(books.getTotalElements());
-        pageWiseResDto.setCurrentPage(books.getNumber());
-        pageWiseResDto.setPageSize(books.getSize());
-        pageWiseResDto.setLast(books.isLast());
-        return pageWiseResDto;
+        return PageWiseResDto.<BookDto>builder()
+                .res(bookDtoList)
+                .totalPages(books.getTotalPages())
+                .totalElements(books.getTotalElements())
+                .currentPage(books.getNumber())
+                .pageSize(books.getSize())
+                .isLast(books.isLast())
+                .build();
     }
 
     @Transactional
