@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -19,4 +20,6 @@ public interface PreferredAuthorRepo extends JpaRepository<PreferredAuthor, Long
     List<PreferredAuthor> findAllByUserId(Long userId);
 
     void deleteByUserIdAndAuthorId(Long userId, Long authorId);
+
+    Optional<PreferredAuthor> findByUserIdAndAuthorId(Long userId, Long authorId);
 }

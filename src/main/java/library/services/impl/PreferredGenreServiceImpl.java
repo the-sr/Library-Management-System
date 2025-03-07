@@ -3,11 +3,13 @@ package library.services.impl;
 import library.config.security.AuthenticationFacade;
 import library.dto.GenreDto;
 import library.models.PreferredGenre;
+import library.repository.GenreRepo;
 import library.repository.PreferredGenreRepo;
 import library.services.PreferredGenreService;
 import library.services.mappers.GenreMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,19 +21,22 @@ public class PreferredGenreServiceImpl implements PreferredGenreService {
     private final PreferredGenreRepo preferredGenreRepo;
     private final AuthenticationFacade facade;
     private final GenreMapper genreMapper;
+    private final GenreRepo genreRepo;
 
     @Override
-    public String addPreferredGenre(List<GenreDto> req) {
+    public String addPreferredGenre(List<Long> genreIds) {
         long userId=facade.getAuthentication().getUserId();
-        if(req!=null && !req.isEmpty()){
-            req.parallelStream().forEach(genreDto -> {
-                PreferredGenre preferredGenre=PreferredGenre.builder()
-                        .userId(userId)
-                        .genreId(genreDto.getId())
-                        .build();
-                preferredGenreRepo.save(preferredGenre);
+        if(genreIds!=null && !genreIds.isEmpty()){
+            genreIds.parallelStream().forEach(id -> {
+                if(genreRepo.findById(id).isPresent() && preferredGenreRepo.findByUserIdAndGenreId(userId,id).isEmpty()){
+                    PreferredGenre preferredGenre=PreferredGenre.builder()
+                            .userId(userId)
+                            .genreId(id)
+                            .build();
+                    preferredGenreRepo.save(preferredGenre);
+                }
             });
-            return "Genre has been successfully added to your preferred genre";
+            return "Genre has been successfully added as your preferred genre";
         }else return "Please select at least one genre";
     }
 
@@ -44,6 +49,7 @@ public class PreferredGenreServiceImpl implements PreferredGenreService {
         return res;
     }
 
+    @Transactional
     @Override
     public String removePreferredGenre(long genreId) {
         preferredGenreRepo.deleteAllByUserIdAndGenreId(facade.getAuthentication().getUserId(), genreId);

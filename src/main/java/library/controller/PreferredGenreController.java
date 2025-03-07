@@ -1,6 +1,5 @@
 package library.controller;
 
-import library.dto.GenreDto;
 import library.services.PreferredGenreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +17,8 @@ public class PreferredGenreController {
 
     @PreAuthorize("hasAuthority('MEMBER')")
     @PostMapping("/add-preferred-genre")
-    public ResponseEntity<?> addPreferredGenre(@RequestBody List<GenreDto> req) {
-        return ResponseEntity.ok(preferredGenreService.addPreferredGenre(req));
+    public ResponseEntity<?> addPreferredGenre(@RequestBody List<Long> genreIds) {
+        return ResponseEntity.ok(preferredGenreService.addPreferredGenre(genreIds));
     }
 
     @PreAuthorize("hasAuthority('MEMBER')")
@@ -29,7 +28,7 @@ public class PreferredGenreController {
     }
 
     @PreAuthorize("hasAuthority('MEMBER')")
-    @GetMapping("/remove-preferred-genres")
+    @DeleteMapping("/remove-preferred-genres")
     public ResponseEntity<?> removePreferredGenres(@RequestParam long genreId) {
         return ResponseEntity.ok().body(preferredGenreService.removePreferredGenre(genreId));
     }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -19,4 +20,6 @@ public interface PreferredGenreRepo extends JpaRepository<PreferredGenre, Long> 
     List<PreferredGenre> findAllByUserId(Long userId);
 
     void deleteAllByUserIdAndGenreId(Long userId, Long genreId);
+
+    Optional<PreferredGenre> findByUserIdAndGenreId(Long userId, Long genreId);
 }

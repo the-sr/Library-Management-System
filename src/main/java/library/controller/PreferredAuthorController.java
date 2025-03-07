@@ -1,6 +1,5 @@
 package library.controller;
 
-import library.dto.AuthorDto;
 import library.services.PreferredAuthorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +17,8 @@ public class PreferredAuthorController {
 
     @PreAuthorize("hasAuthority('MEMBER')")
     @PostMapping("/add-preferred-author")
-    public ResponseEntity<?> addPreferredAuthor(@RequestBody List<AuthorDto> req) {
-        return ResponseEntity.ok(preferredAuthorService.addPreferredAuthor(req));
+    public ResponseEntity<?> addPreferredAuthor(@RequestBody List<Long> authorIds) {
+        return ResponseEntity.ok(preferredAuthorService.addPreferredAuthor(authorIds));
     }
 
     @GetMapping("/preferred-authors")
@@ -28,7 +27,7 @@ public class PreferredAuthorController {
     }
 
     @PreAuthorize("hasAuthority('MEMBER')")
-    @GetMapping("/remove-preferred-authors")
+    @DeleteMapping("/remove-preferred-authors")
     public ResponseEntity<?> removePreferredAuthors(@RequestParam long authorId) {
         return ResponseEntity.ok().body(preferredAuthorService.removePreferredAuthor(authorId));
     }
