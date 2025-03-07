@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BookGenreRepo extends JpaRepository<BookGenre,Long> {
@@ -13,8 +14,7 @@ public interface BookGenreRepo extends JpaRepository<BookGenre,Long> {
 
     List<BookGenre> findAllByGenreId(Long genreId);
 
-    void deleteAllByBookId(Long bookId);
-
     void deleteByBookIdAndGenreId(Long bookId, Long genreId);
 
+    Optional<BookGenre> findByBookIdAndGenreId(Long bookId, Long genreId);
 }

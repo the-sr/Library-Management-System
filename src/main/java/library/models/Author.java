@@ -30,6 +30,6 @@ public class Author {
     @Column(name = "phone")
     private String phone;
 
-    @OneToMany(mappedBy = "author")
+    @OneToMany(mappedBy = "author", cascade = CascadeType.REMOVE)
     private List<BookAuthor> bookAuthor;
 }

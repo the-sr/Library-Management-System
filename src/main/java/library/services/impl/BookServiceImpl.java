@@ -49,8 +49,8 @@ public class BookServiceImpl implements BookService {
     @Override
     public String add(BookDto req) {
         Book book = bookRepo.save(bookMapper.dtoToEntity(req));
-        saveBookAuthor(book.getId(),req.getAuthors());
-        saveBookGenre(book.getId(),req.getGenre());
+        saveBookAuthor(book.getId(), req.getAuthors());
+        saveBookGenre(book.getId(), req.getGenre());
         return "Book added successfully";
     }
 
@@ -154,11 +154,8 @@ public class BookServiceImpl implements BookService {
                 .build();
     }
 
-    @Transactional
     @Override
     public String removeById(Long id) {
-        bookAuthorRepo.deleteAllByBookId(id);
-        bookGenreRepo.deleteAllByBookId(id);
         bookRepo.deleteById(id);
         return "Book deleted successfully";
     }
@@ -176,70 +173,72 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public String addBookAuthor(Long bookId, List<AuthorDto> req) {
-        if(!bookRepo.existsById(bookId))
-            throw new CustomException("Book not found",HttpStatus.NOT_FOUND);
-        saveBookAuthor(bookId,req);
+        if (!bookRepo.existsById(bookId))
+            throw new CustomException("Book not found", HttpStatus.NOT_FOUND);
+        saveBookAuthor(bookId, req);
         return "Author added to the book successfully";
     }
 
     @Transactional
     @Override
     public String removeBookAuthor(Long bookId, Long authorId) {
-        if(!bookRepo.existsById(bookId))
-            throw new CustomException("Book not found",HttpStatus.NOT_FOUND);
-        bookAuthorRepo.deleteByBookIdAndAuthorId(bookId,authorId);
+        if (!bookRepo.existsById(bookId))
+            throw new CustomException("Book not found", HttpStatus.NOT_FOUND);
+        bookAuthorRepo.deleteByBookIdAndAuthorId(bookId, authorId);
         return "Author removed from the book successfully";
     }
 
     @Override
     public String addBookGenre(Long bookId, List<GenreDto> req) {
-        if(!bookRepo.existsById(bookId))
-            throw new CustomException("Book not found",HttpStatus.NOT_FOUND);
-        saveBookGenre(bookId,req);
+        if (!bookRepo.existsById(bookId))
+            throw new CustomException("Book not found", HttpStatus.NOT_FOUND);
+        saveBookGenre(bookId, req);
         return "Genre added to the book successfully";
     }
 
     @Transactional
     @Override
     public String removeBookGenre(Long bookId, Long genreId) {
-        if(!bookRepo.existsById(bookId))
-            throw new CustomException("Book not found",HttpStatus.NOT_FOUND);
-        bookGenreRepo.deleteByBookIdAndGenreId(bookId,genreId);
+        if (!bookRepo.existsById(bookId))
+            throw new CustomException("Book not found", HttpStatus.NOT_FOUND);
+        bookGenreRepo.deleteByBookIdAndGenreId(bookId, genreId);
         return "Genre removed from the book successfully";
     }
 
-    private void saveBookAuthor(Long bookId,List<AuthorDto> authorDtoList){
-        if(authorDtoList!=null && !authorDtoList.isEmpty()){
-            authorDtoList.parallelStream().forEach(author->{
-                author=authorService.add(author);
-                BookAuthor bookAuthor=BookAuthor.builder()
-                        .bookId(bookId)
-                        .authorId(author.getId())
-                        .build();
-                bookAuthorRepo.save(bookAuthor);
-                Set<Long> userIds=preferredAuthorRepo.findAllUserIdsByAuthorId(author.getId());
-                String notificationMessage="A new book of your preferred author \""+author.getFirstName()+" "+author.getLastName()+"\" is now available in the library";
-                userIds.parallelStream().forEach(userId->{
-                    messagingTemplate.convertAndSendToUser(userId.toString(),"/messages",notificationMessage);
-                });
+    private void saveBookAuthor(Long bookId, List<AuthorDto> authorDtoList) {
+        if (authorDtoList != null && !authorDtoList.isEmpty()) {
+            authorDtoList.parallelStream().forEach(author -> {
+                author = authorService.add(author);
+                if(bookAuthorRepo.findByBookIdAndAuthorId(bookId,author.getId()).isEmpty()){
+                    BookAuthor bookAuthor = BookAuthor.builder()
+                            .bookId(bookId)
+                            .authorId(author.getId())
+                            .build();
+                    bookAuthorRepo.save(bookAuthor);
+                    Set<Long> userIds = preferredAuthorRepo.findAllUserIdsByAuthorId(author.getId());
+                    String notificationMessage = "A new book of your preferred author \"" + author.getFirstName() + " " + author.getLastName() + "\" is now available in the library";
+                    userIds.parallelStream().forEach(userId -> messagingTemplate.convertAndSendToUser(userId.toString(), "/messages", notificationMessage));
+                }
             });
         }
     }
 
-    private void saveBookGenre(Long bookId, List<GenreDto> genreDtoList){
-        if(genreDtoList!=null && !genreDtoList.isEmpty()){
-            genreDtoList.parallelStream().forEach(genre->{
-                genre=genreService.add(genre);
-                BookGenre bookGenre=BookGenre.builder()
-                        .bookId(bookId)
-                        .genreId(genre.getId())
-                        .build();
-                bookGenreRepo.save(bookGenre);
-                Set<Long> userIds=preferredGenreRepo.findAllUserIdsByGenreId(genre.getId());
-                String notificationMessage="A new book of your preferred genre \""+genre.getName()+"\" is now available in the library";
-                userIds.parallelStream().forEach(userId->{
-                    messagingTemplate.convertAndSendToUser(userId.toString(),"/messages",notificationMessage);
-                });
+    private void saveBookGenre(Long bookId, List<GenreDto> genreDtoList) {
+        if (genreDtoList != null && !genreDtoList.isEmpty()) {
+            genreDtoList.parallelStream().forEach(genre -> {
+                genre = genreService.add(genre);
+                if(bookGenreRepo.findByBookIdAndGenreId(bookId, genre.getId()).isEmpty()) {
+                    BookGenre bookGenre = BookGenre.builder()
+                            .bookId(bookId)
+                            .genreId(genre.getId())
+                            .build();
+                    bookGenreRepo.save(bookGenre);
+                    Set<Long> userIds = preferredGenreRepo.findAllUserIdsByGenreId(genre.getId());
+                    String notificationMessage = "A new book of your preferred genre \"" + genre.getName() + "\" is now available in the library";
+                    userIds.parallelStream().forEach(userId ->
+                            messagingTemplate.convertAndSendToUser(userId.toString(), "/messages", notificationMessage)
+                    );
+                }
             });
         }
     }
@@ -247,18 +246,16 @@ public class BookServiceImpl implements BookService {
     private List<AuthorDto> getAuthorDtoList(BookDto bookDto) {
         List<BookAuthor> bookAuthorList = bookAuthorRepo.findAllByBookId(bookDto.getId());
         List<AuthorDto> authorDtoList = new ArrayList<>();
-        bookAuthorList.parallelStream().forEach(bookAuthor -> {
-            authorDtoList.add(authorMapper.entityToDto(bookAuthor.getAuthor()));
-        });
+        bookAuthorList.parallelStream().forEach(bookAuthor ->
+                authorDtoList.add(authorMapper.entityToDto(bookAuthor.getAuthor())));
         return authorDtoList;
     }
 
     private List<GenreDto> getGenreDtoList(BookDto bookDto) {
         List<BookGenre> bookGenreList = bookGenreRepo.findAllByBookId(bookDto.getId());
         List<GenreDto> genreDtoList = new ArrayList<>();
-        bookGenreList.parallelStream().forEach(bookGenre -> {
-            genreDtoList.add(genreMapper.entityToDto(bookGenre.getGenre()));
-        });
+        bookGenreList.parallelStream().forEach(bookGenre ->
+                genreDtoList.add(genreMapper.entityToDto(bookGenre.getGenre())));
         return genreDtoList;
     }
 }

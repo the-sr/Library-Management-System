@@ -42,7 +42,7 @@ public class UserRestController {
     @Operation(summary = "Get all users page wise")
     @PreAuthorize("hasAnyAuthority('ADMIN','LIBRARIAN')")
     @GetMapping("/page-wise-users")
-    public ResponseEntity<?> getUsersPagewise(
+    public ResponseEntity<?> getUsersPageWise(
             @RequestParam("pageNumber") Integer pageNumber,
             @RequestParam(value = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
             @RequestParam(value = "sortBy", defaultValue = AppConstants.SORT_BY, required = false) String sortBy,

@@ -38,10 +38,13 @@ public class Book {
     @Column(name = "average_rating")
     private Float averageRating;
 
-    @OneToMany(mappedBy = "book")
+    @OneToMany(mappedBy = "book",cascade = CascadeType.REMOVE)
     private List<BookAuthor> bookAuthor;
 
-    @OneToMany(mappedBy = "book", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "book", cascade = CascadeType.REMOVE)
+    private List<BookGenre> bookGenre;
+
+    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private List<Review> reviews;
 
 }

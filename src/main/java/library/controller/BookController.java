@@ -41,7 +41,7 @@ public class BookController {
         return ResponseEntity.ok().body(bookService.findByAuthor(author));
     }
 
-    @GetMapping("/book-by-genre")
+    @GetMapping("/books-by-genre")
     public ResponseEntity<?> getBookByGenre(@RequestParam String genre) {
         return ResponseEntity.ok().body(bookService.findByGenre(genre));
     }
@@ -52,7 +52,7 @@ public class BookController {
     }
 
     @GetMapping("/page-wise-books")
-    public ResponseEntity<?> getBooksPagewise(
+    public ResponseEntity<?> getBooksPageWise(
             @RequestParam("pageNumber") Integer pageNumber,
             @RequestParam(value = "pageSize", defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
             @RequestParam(value = "sortBy", defaultValue = AppConstants.SORT_BY, required = false) String sortBy,
@@ -79,7 +79,7 @@ public class BookController {
     }
 
     @PreAuthorize("hasAuthority('LIBRARIAN')")
-    @DeleteMapping("/book/remove-author")
+    @PutMapping("/book/remove-author")
     public ResponseEntity<?> removeAuthor(@RequestParam Long bookId, @RequestParam Long authorId) {
         return ResponseEntity.ok().body(bookService.removeBookAuthor(bookId, authorId));
     }
@@ -91,7 +91,7 @@ public class BookController {
     }
 
     @PreAuthorize("hasAuthority('LIBRARIAN')")
-    @DeleteMapping("/book/remove-genre")
+    @PutMapping("/book/remove-genre")
     public ResponseEntity<?> removeGenre(@RequestParam Long bookId, @RequestParam Long genreId) {
         return ResponseEntity.ok().body(bookService.removeBookGenre(bookId, genreId));
     }

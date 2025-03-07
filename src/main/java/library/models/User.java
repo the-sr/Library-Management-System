@@ -61,6 +61,9 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Address> address;
 
+    @OneToMany(mappedBy = "user",cascade = CascadeType.REMOVE)
+    private List<Review> review;
+
     @PrePersist
     private void onCreate() {
         isActive = false;

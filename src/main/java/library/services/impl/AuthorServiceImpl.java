@@ -24,8 +24,10 @@ public class AuthorServiceImpl implements AuthorService {
 
     @Override
     public AuthorDto add(AuthorDto req) {
-        Author author=authorRepo.findByEmail(req.getEmail()).orElse(null);
-        return authorMapper.entityToDto(Objects.requireNonNullElseGet(author, () -> authorRepo.save(authorMapper.dtoToEntity(req))));
+        String name=req.getFirstName()+" "+req.getLastName();
+        return authorRepo.findByName(name)
+                .map(authorMapper::entityToDto)
+                .orElse(authorMapper.entityToDto(authorRepo.save(authorMapper.dtoToEntity(req))));
     }
 
     @Override
