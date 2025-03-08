@@ -11,5 +11,6 @@ public interface UserBookMapper extends MapperInterface<UserBook, UserBookDto> {
     UserBook dtoToEntity(UserBookDto userBookDto);
 
     @Mapping(target = "user.password", ignore = true)
+    @Mapping(target = "user.address",ignore = true)
     UserBookDto entityToDto(UserBook userBook);
 }

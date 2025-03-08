@@ -45,9 +45,9 @@ public class UserBookServiceImpl implements UserBookService {
         User user = userRepo.findById(userId).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
         if (user.getBorrowedBookCount() >= borrowLimit)
             throw new CustomException("Maximum borrow limit is " + borrowLimit, HttpStatus.BAD_REQUEST);
-        Book book = bookRepo.findById(bookId).orElseThrow(() -> new CustomException("Book not found", HttpStatus.NOT_FOUND));
-        if(userBookRepo.findByUserIdAndBookId(userId,bookId).isPresent())
+        if (userBookRepo.findByUserIdAndBookId(userId, bookId).isPresent())
             throw new CustomException("Book already borrowed", HttpStatus.CONFLICT);
+        Book book = bookRepo.findById(bookId).orElseThrow(() -> new CustomException("Book not found", HttpStatus.NOT_FOUND));
         if (book.getBookCount() < 1)
             throw new CustomException("Book is out of stock", HttpStatus.BAD_REQUEST);
         UserBook userBook = UserBook.builder()
@@ -60,22 +60,80 @@ public class UserBookServiceImpl implements UserBookService {
         userBookRepo.save(userBook);
         book.setBookCount(book.getBookCount() - 1);
         bookRepo.save(book);
-        return "Your book borrow request was successful. Please visit the library to pick up your book.";
+        return "Your book borrow request was successful. Please visit the library to pick up your book with a week.";
+    }
+
+    @Transactional
+    @Override
+    public String cancelBorrowRequest(Long userBookId) {
+        UserBook userBook=userBookRepo.findById(userBookId).orElseThrow(()->new CustomException("User Book not found",HttpStatus.NOT_FOUND));
+        if(userBook.getExpectedReturnDate()==null && userBook.getRequestType()==RequestType.BORROW){
+            User user=userRepo.findById(userBook.getUserId()).orElseThrow(()->new CustomException("User not found",HttpStatus.NOT_FOUND));
+            user.setBorrowedBookCount(user.getBorrowedBookCount()-1);
+            userRepo.save(user);
+            Book book=bookRepo.findById(userBook.getBookId()).orElseThrow(() -> new CustomException("Book not found", HttpStatus.NOT_FOUND));
+            book.setBookCount(book.getBookCount()+1);
+            bookRepo.save(book);
+            userBookRepo.delete(userBook);
+            return "Borrow Request successfully canceled";
+        }else throw new CustomException("Invalid Request",HttpStatus.BAD_REQUEST);
     }
 
     @Override
-    public String returnRequest(Long bookId) {
+    public String handelBorrowRequest(Long userBookId) {
+        UserBook userBook = userBookRepo.findById(userBookId).orElseThrow(() -> new CustomException("User Book not found", HttpStatus.NOT_FOUND));
+        if(userBook.getRequestType()==RequestType.BORROW && userBook.getExpectedReturnDate()==null) {
+            userBook.setBorrowedDate(LocalDate.now());
+            userBook.setExpectedReturnDate(LocalDate.now().plusMonths(borrowPeriodLimit));
+            userBookRepo.save(userBook);
+            return "Book successfully borrowed";
+        }else throw new CustomException("Invalid Request",HttpStatus.BAD_REQUEST);
+    }
+
+    @Transactional
+    @Override
+    public String returnRequest(Long userBookId) {
         long userId = facade.getAuthentication().getUserId();
-        UserBook userBook=userBookRepo.findByUserIdAndBookId(userId,bookId).orElseThrow(() -> new CustomException("You haven't borrowed this book yet", HttpStatus.BAD_REQUEST));
-        double fineAmount=0;
-        if(LocalDate.now().isAfter(userBook.getExpectedReturnDate()))
-            fineAmount=2500;
-        userBook.setFineAmount(fineAmount);
-        userBook.setRequestType(RequestType.RETURN);
-        userBookRepo.save(userBook);
-        if(fineAmount>0){
-            return "Your book return request was successful. Please visit the library with fine amount Rs."+fineAmount+" to return the book";
-        }else return "Your book return request was successful. Please visit the library to return the book";
+        UserBook userBook = userBookRepo.findById(userBookId).orElseThrow(() -> new CustomException("You haven't borrowed this book yet", HttpStatus.BAD_REQUEST));
+        if(userBook.getExpectedReturnDate() != null && userBook.getRequestType()==RequestType.BORROW){
+            double fineAmount = 0;
+            if (LocalDate.now().isAfter(userBook.getExpectedReturnDate()))
+                fineAmount = 2500;
+            userBook.setFineAmount(fineAmount);
+            userBook.setRequestType(RequestType.RETURN);
+            userBookRepo.save(userBook);
+            if (fineAmount > 0)
+                return "Your book return request was successful. Please visit the library with fine amount Rs." + fineAmount + " to return the book";
+            else return "Your book return request was successful. Please visit the library to return the book";
+        }else throw new CustomException("Invalid request",HttpStatus.BAD_REQUEST);
+    }
+
+    @Override
+    public String cancelReturnRequest(Long userBookId) {
+        UserBook userBook = userBookRepo.findById(userBookId).orElseThrow(() -> new CustomException("User Book not found", HttpStatus.NOT_FOUND));
+        if(userBook.getExpectedReturnDate()!=null && userBook.getRequestType()==RequestType.RETURN){
+            userBook.setFineAmount(0.0);
+            userBook.setRequestType(RequestType.BORROW);
+            userBookRepo.save(userBook);
+            return "Return Request successfully canceled";
+        }else throw new CustomException("Invalid request",HttpStatus.BAD_REQUEST);
+    }
+
+    @Transactional
+    @Override
+    public String handelReturnRequest(Long userBookId) {
+        UserBook userBook = userBookRepo.findById(userBookId).orElseThrow(() -> new CustomException("User Book not found", HttpStatus.NOT_FOUND));
+        if(userBook.getIsActive() && userBook.getRequestType()==RequestType.RETURN && userBook.getExpectedReturnDate()!=null) {
+            userBook.setIsActive(false);
+            userBookRepo.save(userBook);
+            User user = userRepo.findById(userBook.getUserId()).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+            user.setBorrowedBookCount(user.getBorrowedBookCount() - 1);
+            userRepo.save(user);
+            Book book = bookRepo.findById(userBook.getBookId()).orElseThrow(() -> new CustomException("Book not found", HttpStatus.NOT_FOUND));
+            book.setBookCount(book.getBookCount() + 1);
+            bookRepo.save(book);
+            return "Book successfully returned";
+        }else throw new CustomException("Invalid Request", HttpStatus.BAD_REQUEST);
     }
 
     @Override
@@ -85,31 +143,7 @@ public class UserBookServiceImpl implements UserBookService {
 
     @Override
     public List<UserBookDto> getAll(Long userId, String requestType, Boolean isActive) {
-        List<UserBook> userBookList=userBookRepo.findAll(userId,requestType,isActive);
+        List<UserBook> userBookList = userBookRepo.findAll(userId, requestType, isActive);
         return userBookList.parallelStream().map(userBookMapper::entityToDto).collect(Collectors.toList());
-    }
-
-    @Override
-    public String handelBorrowRequest(Long userBookId) {
-        UserBook userBook=userBookRepo.findById(userBookId).orElseThrow(()->new CustomException("User Book not found",HttpStatus.NOT_FOUND));
-        userBook.setBorrowedDate(LocalDate.now());
-        userBook.setExpectedReturnDate(LocalDate.now().plusMonths(borrowPeriodLimit));
-        userBookRepo.save(userBook);
-        return "Book successfully borrowed";
-    }
-
-    @Transactional
-    @Override
-    public String handelReturnRequest(Long userBookId) {
-        UserBook userBook=userBookRepo.findById(userBookId).orElseThrow(()->new CustomException("User Book not found",HttpStatus.NOT_FOUND));
-        userBook.setIsActive(false);
-        userBookRepo.save(userBook);
-        User user=userRepo.findById(userBook.getUserId()).get();
-        user.setBorrowedBookCount(user.getBorrowedBookCount()-1);
-        userRepo.save(user);
-        Book book=bookRepo.findById(userBook.getBookId()).get();
-        book.setBookCount(book.getBookCount()+1);
-        bookRepo.save(book);
-        return "Book successfully returned";
     }
 }

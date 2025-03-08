@@ -22,10 +22,24 @@ public class UserBookController {
     }
 
     @PreAuthorize("hasAuthority('MEMBER')")
-    @Operation(summary = "Send book return request")
+    @Operation(summary = "Send book borrow request")
+    @DeleteMapping("/cancel-borrow-request")
+    public ResponseEntity<?> cancelBorrowRequest(@RequestParam Long bookId){
+        return ResponseEntity.ok().body(userBookService.cancelBorrowRequest(bookId));
+    }
+
+    @PreAuthorize("hasAuthority('MEMBER')")
+    @Operation(summary = "Send book borrow request")
     @PostMapping("/return-request")
-    public ResponseEntity<?> returnRequest(@RequestParam Long bookId){
-        return ResponseEntity.ok().body(userBookService.returnRequest(bookId));
+    public ResponseEntity<?> returnRequest(@RequestParam Long userBookId){
+        return ResponseEntity.ok().body(userBookService.returnRequest(userBookId));
+    }
+
+    @PreAuthorize("hasAuthority('MEMBER')")
+    @Operation(summary = "Send book return request")
+    @DeleteMapping("/cancel-return-request")
+    public ResponseEntity<?> cancelReturnRequest(@RequestParam Long userBookId){
+        return ResponseEntity.ok().body(userBookService.cancelReturnRequest(userBookId));
     }
 
     @PreAuthorize("hasAnyAuthority('LIBRARIAN','MEMBER')")
