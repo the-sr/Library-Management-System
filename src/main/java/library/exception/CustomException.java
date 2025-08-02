@@ -6,12 +6,33 @@ import org.springframework.http.HttpStatus;
 @Getter
 public class CustomException extends RuntimeException {
 
-    private final ErrorMessage dto;
-    private final HttpStatus httpStatus;
+    private final int statusCode;
+    private final ErrorMessage errorMessage;
+
+    public CustomException(String message) {
+        super(message);
+        statusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
+        errorMessage = ErrorMessage.builder()
+                .message(message)
+                .statusCode(statusCode)
+                .build();
+    }
 
     public CustomException(String message, HttpStatus httpStatus) {
         super(message);
-        this.httpStatus = httpStatus;
-        dto = ErrorMessage.builder().message(message).statusCode(httpStatus.value()).build();
+        statusCode = httpStatus.value();
+        errorMessage = ErrorMessage.builder()
+                .message(message)
+                .statusCode(statusCode)
+                .build();
+    }
+
+    public CustomException(String message, int statusCode) {
+        super(message);
+        this.statusCode = statusCode;
+        errorMessage = ErrorMessage.builder()
+                .message(message)
+                .statusCode(statusCode)
+                .build();
     }
 }

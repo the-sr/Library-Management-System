@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorMessage> handleException(CustomException e) {
-        return ResponseEntity.status(e.getHttpStatus()).body(e.getDto());
+        return ResponseEntity.status(e.getStatusCode()).body(e.getErrorMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -25,7 +25,11 @@ public class GlobalExceptionHandler {
         if (message.contains("Detail:"))
             message = message.substring(message.indexOf("Detail:") + 11);
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ErrorMessage.builder().statusCode(HttpStatus.CONFLICT.value()).message(message).build());
+                .body(ErrorMessage.builder()
+                        .statusCode(HttpStatus.CONFLICT.value())
+                        .message(message)
+                        .build()
+                );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -34,21 +38,33 @@ public class GlobalExceptionHandler {
         e.getBindingResult().getAllErrors().forEach(error -> {
             message.set(message + error.getDefaultMessage() + ", ");
         });
-        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(ErrorMessage.builder()
-                .statusCode(HttpStatus.METHOD_NOT_ALLOWED.value()).message(String.valueOf(message)).build());
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ErrorMessage.builder()
+                        .statusCode(HttpStatus.METHOD_NOT_ALLOWED.value())
+                        .message(String.valueOf(message))
+                        .build()
+                );
     }
 
     @ExceptionHandler(PermissionDeniedDataAccessException.class)
     public ResponseEntity<ErrorMessage> handleException(PermissionDeniedDataAccessException e) {
         String message = e.getMessage();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorMessage.builder().statusCode(HttpStatus.UNAUTHORIZED.value()).message(message).build());
+                .body(ErrorMessage.builder()
+                        .statusCode(HttpStatus.UNAUTHORIZED.value())
+                        .message(message)
+                        .build()
+                );
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorMessage> handleException(Exception e) {
         String message = e.getMessage();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                ErrorMessage.builder().statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value()).message(message).build());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorMessage.builder()
+                        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .message(message)
+                        .build()
+                );
     }
 }
