@@ -32,6 +32,7 @@ import library.utils.EmailService;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,15 +54,15 @@ public class UserServiceImpl implements UserService {
 
     @Value("${otp-length}")
     private String optLength;
-    private static final Map<String, Integer> otpMap = new HashMap<>();
+    private static final Map<LocalDateTime, Map<String, Integer>> otpMap = new HashMap<>();
     private static final Map<String, String> tokenMap = new HashMap<>();
 
     @Override
     public String signUp(UserDto req) {
         if (userRepo.findByEmail(req.getEmail()).isPresent())
-            throw new CustomException("Email already registered", HttpStatus.CONFLICT);
+            throw new CustomException("Email already registered. Please use a different email address or log in.", 409);
         if (!req.getPassword().equals(req.getConfirmPassword()))
-            throw new CustomException("Confirm Password and Password must be same", HttpStatus.BAD_REQUEST);
+            throw new CustomException("Confirm Password and Password must be same", 400);
         new Thread(()->{
             int otp = getOtp(req.getEmail());
             String body="<b>Dear "+req.getFirstName()+",</b></br>" +
@@ -80,6 +81,7 @@ public class UserServiceImpl implements UserService {
                 addressService.saveAddress(address);
             });
         }
+        log.info("User created successfully");
         return "Please check you email for OPT to verify your account and proceed further";
     }
 
@@ -171,7 +173,7 @@ public class UserServiceImpl implements UserService {
     public String forgotPassword(OTPDto req) {
         if (userRepo.findByEmail(req.getEmail()).isPresent()) {
             int otp = getOtp(req.getEmail());
-            otpMap.put(req.getEmail(), otp);
+            otpMap.put(LocalDateTime.now(),Map.of(req.getEmail(), otp));
             String body = "Your one-time password (OTP) for resetting your password is <b>" + otp + "</b>. This code will expire in 5 minutes. Please enter it promptly to complete your request.";
             emailService.sendMail(req.getEmail(), "Forgot Password Request", body);
         }
@@ -180,7 +182,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public OTPDto validateOTP(OTPDto req) {
-        if (otpMap.containsKey(req.getEmail())) {
+        if (otpMap.values().containsKey(req.getEmail())) {
             if (otpMap.get(req.getEmail()).equals(req.getOTP())) {
                 String token = "just_a_random_token";
                 tokenMap.put(req.getEmail(), token);
@@ -227,9 +229,13 @@ public class UserServiceImpl implements UserService {
         return "Your account will be deleted within a month";
     }
 
-    public static void clearOTPMap() {
-        otpMap.clear();
-        log.info("OTP map cleared");
+    public static void removeExpiredOtp() {
+        otpMap.keySet().stream().map(key->{
+            if(key.plusMinutes(5).isBefore(LocalDateTime.now()))
+                otpMap.remove(key);
+            return null;
+        });
+        log.info("Expired OTP removed");
     }
 
     public static void clearTokenMap() {
@@ -239,7 +245,8 @@ public class UserServiceImpl implements UserService {
 
     private int getOtp(String email) {
         int otp = (int) (Math.pow(10, Integer.parseInt(optLength) - 1) + Math.random() * 9 * Math.pow(10, Integer.parseInt(optLength) - 1));
-        otpMap.put(email, otp);
+        LocalDateTime expiryTime = LocalDateTime.now();
+        otpMap.put(expiryTime, Map.of(email, otp));
         return otp;
     }
 }

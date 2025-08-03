@@ -27,7 +27,7 @@ public class ScheduledService {
 
     @Scheduled(cron = "0 5 * * * *")    //runs every 5 minutes
     private void clearOTPMap(){
-        UserServiceImpl.clearOTPMap();
+        UserServiceImpl.removeExpiredOtp();
         log.info("OTP map cleared");
     }
 
