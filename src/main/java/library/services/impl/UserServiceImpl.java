@@ -6,6 +6,7 @@ import library.config.security.AuthenticationFacade;
 import library.dto.*;
 import library.services.AddressService;
 import library.services.FileService;
+import library.utils.OtpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +44,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepo userRepo;
     private final UserMapper userMapper;
+    private final OtpService otpService;
     private final AddressService addressService;
     private final EmailService emailService;
     private final FileService fileService;
@@ -63,17 +65,17 @@ public class UserServiceImpl implements UserService {
             throw new CustomException("Email already registered. Please use a different email address or log in.", 409);
         if (!req.getPassword().equals(req.getConfirmPassword()))
             throw new CustomException("Confirm Password and Password must be same", 400);
-        new Thread(()->{
-            int otp = getOtp(req.getEmail());
-            String body="<b>Dear "+req.getFirstName()+",</b></br>" +
+        User user = userMapper.dtoToEntity(req);
+        user = userRepo.save(user);
+        new Thread(() -> {
+            String otp = otpService.generateOtp(req.getEmail());
+            String body = "<b>Dear " + req.getFirstName() + ",</b></br>" +
                     "</br><b>Hello and Welcome !</b></br></br>" +
-                    "</br>To complete your account verification, please use the One-Time Password (OTP) below:</br></br><b>Your OTP: "+otp+ "</b></br>" +
-                    "</br>This OTP is valid for <b>5 minutes</b>. Please do not share it with anyone for security reasons.</br>" +
+                    "</br>To complete your account verification, please use the One-Time Password (OTP) below:</br></br><b>Your OTP: " + otp +
+                    "</b></br>" + "</br>This OTP is valid for <b>5 minutes</b>. Please do not share it with anyone for security reasons.</br>" +
                     "</br>If you didn't request this, please ignore this email.";
             emailService.sendMail(req.getEmail(), "Verify your Account", body);
         }).start();
-        User user=userMapper.dtoToEntity(req);
-        user = userRepo.save(user);
         long userId = user.getId();
         if (req.getAddress() != null) {
             req.getAddress().parallelStream().forEach(address -> {
@@ -87,26 +89,33 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String activateAccount(OTPDto req) {
-        if (otpMap.containsKey(req.getEmail())) {
-            if (otpMap.get(req.getEmail()).equals(req.getOTP())) {
-                User user=userRepo.findByEmail(req.getEmail()).orElseThrow(()->new CustomException("User not Found",HttpStatus.NOT_FOUND));
-                user.setIsActive(true);
-                userRepo.save(user);
-                otpMap.remove(req.getEmail());
-                return "Your account has been verified";
-            }else throw new CustomException("Invalid OTP", HttpStatus.UNAUTHORIZED);
-        } else throw new CustomException("OTP expired or not requested", HttpStatus.BAD_REQUEST);
+        if (otpService.validateOtp(req.getEmail(), req.getOTP())) {
+            User user = userRepo.findByEmail(req.getEmail()).orElseThrow(() -> new CustomException("User not Found", HttpStatus.NOT_FOUND));
+            user.setIsActive(true);
+            userRepo.save(user);
+            return "Your account has been verified";
+        } else {
+            new Thread(() -> {
+                String otp = otpService.generateOtp(req.getEmail());
+                String body = "<b>Dear User,</b></br>" +
+                        "</br><b>Welcome !</b></br></br>" +
+                        "</br>To complete your account verification, please use the One-Time Password (OTP) below:</br></br><b>Your OTP: " + otp +
+                        "</b></br>" + "</br>This OTP is valid for <b>5 minutes</b>. Please do not share it with anyone for security reasons.</br>" +
+                        "</br>If you didn't request this, please ignore this email.";
+                emailService.sendMail(req.getEmail(), "Verify your Account", body);
+            }).start();
+            return "Your OTP has already expired, please check your mail for new OTP";
+        }
     }
 
     @Override
-    public LoginDto signIn(LoginDto req) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword()));
+    public Object signIn(LoginDto req) {
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword()));
         final AuthenticatedUser userDetails = (AuthenticatedUser) userDetailsService.loadUserByUsername(req.getUsername());
         if (userDetails.isActive()) {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             final String token = jwtUtil.generateToken(userDetails);
-            return LoginDto.builder().token(token).build();
+            return Map.of("token", token);
         } else {
             int otp = getOtp(userDetails.getUsername());
             String body = "Your one-time password (OTP) for activating your account is <b>" + otp + "</b>. This code will expire in 5 minutes. Please enter it promptly to complete your request.";
@@ -117,12 +126,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String addProfilePicture(Long userId, MultipartFile profilePicture) {
-        String filename=fileService.saveFile(profilePicture);
-        return userRepo.findById(userId).map(u->{
+        String filename = fileService.saveFile(profilePicture);
+        return userRepo.findById(userId).map(u -> {
             u.setProfilePicture(filename);
             userRepo.save(u);
             return "Profile Picture Added";
-        }).orElseThrow(()->new CustomException("User Not Found",HttpStatus.NOT_FOUND));
+        }).orElseThrow(() -> new CustomException("User Not Found", HttpStatus.NOT_FOUND));
     }
 
     @Override
@@ -145,14 +154,7 @@ public class UserServiceImpl implements UserService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
         Page<User> users = userRepo.findAllPagewiseByIsActive(pageable, status);
         List<UserDto> res = users.stream().map(userMapper::entityToDto).collect(Collectors.toList());
-        return PageWiseResDto.<UserDto>builder()
-                .res(res)
-                .totalPages(users.getTotalPages())
-                .totalElements(users.getTotalElements())
-                .currentPage(users.getNumber())
-                .pageSize(users.getSize())
-                .isLast(users.isLast())
-                .build();
+        return PageWiseResDto.<UserDto>builder().res(res).totalPages(users.getTotalPages()).totalElements(users.getTotalElements()).currentPage(users.getNumber()).pageSize(users.getSize()).isLast(users.isLast()).build();
     }
 
     @Override
@@ -173,7 +175,7 @@ public class UserServiceImpl implements UserService {
     public String forgotPassword(OTPDto req) {
         if (userRepo.findByEmail(req.getEmail()).isPresent()) {
             int otp = getOtp(req.getEmail());
-            otpMap.put(LocalDateTime.now(),Map.of(req.getEmail(), otp));
+            otpMap.put(LocalDateTime.now(), Map.of(req.getEmail(), otp));
             String body = "Your one-time password (OTP) for resetting your password is <b>" + otp + "</b>. This code will expire in 5 minutes. Please enter it promptly to complete your request.";
             emailService.sendMail(req.getEmail(), "Forgot Password Request", body);
         }
@@ -230,9 +232,8 @@ public class UserServiceImpl implements UserService {
     }
 
     public static void removeExpiredOtp() {
-        otpMap.keySet().stream().map(key->{
-            if(key.plusMinutes(5).isBefore(LocalDateTime.now()))
-                otpMap.remove(key);
+        otpMap.keySet().stream().map(key -> {
+            if (key.plusMinutes(5).isBefore(LocalDateTime.now())) otpMap.remove(key);
             return null;
         });
         log.info("Expired OTP removed");

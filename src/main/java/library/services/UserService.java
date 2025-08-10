@@ -11,7 +11,7 @@ public interface UserService {
 
     String activateAccount(OTPDto req);
 
-    LoginDto signIn(LoginDto req);
+    Object signIn(LoginDto req);
 
     String addProfilePicture(Long userId, MultipartFile profilePicture);
 

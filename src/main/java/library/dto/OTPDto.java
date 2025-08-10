@@ -9,7 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 
 public class OTPDto {
-    private int OTP;
+    private String OTP;
     private String email;
     private String token;
 }

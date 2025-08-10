@@ -15,5 +15,4 @@ public class LoginDto {
     private String username;
     @NotNull
     private String password;
-    private String token;
 }
