@@ -15,6 +15,8 @@ public interface UserService {
 
     String addProfilePicture(Long userId, MultipartFile profilePicture);
 
+    UserDto getProfile();
+
     UserDto findById(long id);
 
     List<UserDto> getAllUsers(Boolean status);
@@ -23,7 +25,7 @@ public interface UserService {
 
     String deleteById(long id);
 
-    UserDto updateById(UserDto req);
+    UserDto updateProfile(UserDto req);
 
     String forgotPassword(OTPDto req);
 

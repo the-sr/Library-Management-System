@@ -21,13 +21,20 @@ public class UserRestController {
 
     private final UserService userService;
 
-    @PostMapping(value = "/user/add-profile-picture",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    //TODO
+    @PostMapping(value = "/users/add-profile-picture",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> addProfilePicture(@RequestParam Long userId,@RequestPart MultipartFile profilePicture){
         return ResponseEntity.ok().body(userService.addProfilePicture(userId,profilePicture));
     }
 
+    @Operation(summary = "Get Profile")
+    @GetMapping("/users/me")
+    public ResponseEntity<?> getProfile() {
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getProfile());
+    }
+
     @Operation(summary = "Get user by ID")
-    @GetMapping("/user/{id}")
+    @GetMapping("/users/{id}")
     public ResponseEntity<?> getUser(@PathVariable("id") long id) {
         return ResponseEntity.status(HttpStatus.OK).body(userService.findById(id));
     }
@@ -52,13 +59,13 @@ public class UserRestController {
     }
 
     @Operation(summary = "Update user")
-    @PutMapping("/user")
+    @PutMapping("/users/me")
     public ResponseEntity<?> updateUser(@Valid @RequestBody UserDto req) {
-        return ResponseEntity.ok().body(userService.updateById(req));
+        return ResponseEntity.ok().body(userService.updateProfile(req));
     }
 
     @Operation(summary = "Update password")
-    @PutMapping("/update-password")
+    @PutMapping("/users/update-password")
     public ResponseEntity<?> updatePassword(@RequestBody PasswordDto req) {
         return ResponseEntity.ok().body(userService.updatePassword(req));
     }

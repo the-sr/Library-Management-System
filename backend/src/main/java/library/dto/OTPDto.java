@@ -10,6 +10,6 @@ import lombok.*;
 
 public class OTPDto {
     private String OTP;
-    private String email;
-    private String token;
+    private String identifier;
+//    private String requestToken;
 }

@@ -6,6 +6,7 @@ import library.dto.PasswordDto;
 import library.dto.UserDto;
 import library.dto.LoginDto;
 import library.services.UserService;
+import library.utils.OtpService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class PublicController {
 
     private final UserService userService;
-
+    private final OtpService otpService;
 
     @PostMapping("/sign-up")
     public ResponseEntity<?> signUp(@Valid @RequestBody UserDto req) {
@@ -42,6 +43,11 @@ public class PublicController {
     @PostMapping("/validate-otp")
     public ResponseEntity<?> validateOTP(@RequestBody OTPDto req){
         return ResponseEntity.ok().body(userService.validateOTP(req));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOTP(@RequestBody OTPDto req){
+        return ResponseEntity.ok().body(otpService.generateOtp(req.getIdentifier()));
     }
 
     @PutMapping("/reset-password")

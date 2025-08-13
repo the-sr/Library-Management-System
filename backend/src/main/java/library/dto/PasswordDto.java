@@ -10,6 +10,5 @@ import lombok.*;
 public class PasswordDto {
     private String oldPassword;
     private String newPassword;
-    private String email;
-    private String token;
+    private String identifier;
 }

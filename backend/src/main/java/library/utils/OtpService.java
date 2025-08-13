@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,8 +18,9 @@ public class OtpService {
     private static final ConcurrentHashMap<String, Map<String, Object>> otpMap = new ConcurrentHashMap<>();
 
     public String generateOtp(String identifier) {
+        identifier = (Objects.isNull(identifier) || identifier.isEmpty()) ? generateIdentifier() : identifier;
+        otpMap.remove(identifier);
         Random random = new Random();
-        identifier = (identifier != null) ? identifier : generateIdentifier();
         StringBuilder otp = new StringBuilder();
         for (int i = 0; i < 6; i++)
             otp.append(random.nextInt(10));
@@ -31,7 +33,7 @@ public class OtpService {
         Map<String, Object> otpDetails = otpMap.get(identifier);
         if (otpDetails == null || isExpired(otpDetails.get("creationTime"))) return false;
         else {
-            if (otpDetails.get("otp").equals(otp)) {
+            if (Objects.equals(otp, otpDetails.get("otp"))) {
                 otpMap.remove(identifier);
                 return true;
             } else throw new CustomException("Invalid OTP. Please try again");
