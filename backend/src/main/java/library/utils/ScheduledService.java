@@ -25,18 +25,6 @@ public class ScheduledService {
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final UserRepo userRepo;
 
-    @Scheduled(cron = "0 5 * * * *")    //runs every 5 minutes
-    private void clearOTPMap(){
-        UserServiceImpl.removeExpiredOtp();
-        log.info("OTP map cleared");
-    }
-
-    @Scheduled(cron = "0 0 0 * * *")    //runs at 12 am everyday
-    private void clearTokenMap(){
-        UserServiceImpl.clearTokenMap();
-        log.info("Token map cleared");
-    }
-
     @Scheduled(cron = "0 0 0 * * *")    //runs at 12 am everyday
     private void deleteInActiveAccounts(){
         List<User> userList=userRepo.findAllByIsActiveAndUpdatedDateBefore(false,LocalDate.now().minusMonths(1));
