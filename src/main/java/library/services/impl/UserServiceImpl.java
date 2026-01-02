@@ -53,7 +53,6 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationFacade facade;
     private final PasswordEncoder encoder;
 
-    private static final Map<LocalDateTime, Map<String, Integer>> otpMap = new HashMap<>();
     private static final Map<String, String> tokenMap = new HashMap<>();
 
     @Override
@@ -229,19 +228,6 @@ public class UserServiceImpl implements UserService {
         userRepo.save(user);
         emailService.sendMail(user.getEmail(), "Account Deletion", "Your account will be deleted within a month. ");
         return "Your account will be deleted within a month";
-    }
-
-    public static void removeExpiredOtp() {
-        otpMap.keySet().stream().map(key -> {
-            if (key.plusMinutes(5).isBefore(LocalDateTime.now())) otpMap.remove(key);
-            return null;
-        });
-        log.info("Expired OTP removed");
-    }
-
-    public static void clearTokenMap() {
-        tokenMap.clear();
-        log.info("Token map cleared");
     }
 
 }
