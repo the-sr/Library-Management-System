@@ -12,6 +12,7 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
+        //  http://127.0.0.1:8080/swagger-ui/index.html
         return new OpenAPI()
                 .info(new Info().title("Library Management System").version("0"))
                 .components(new io.swagger.v3.oas.models.Components()
