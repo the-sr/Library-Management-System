@@ -46,7 +46,7 @@ public class ScheduledService {
             }).start();
 
             new Thread(() -> {
-                String body = "<b>Dear " + user.getFirstName() + ",</b></br>" +
+                String body = "<b>Dear " + user.getName() + ",</b></br>" +
                         "<br>We hope you're enjoying your book! This is a friendly reminder that the book titled <b>\"" + book.getTitle() +
                         "\"</b> you borrowed was due for return on <b>" + userBook.getExpectedReturnDate() + "</b></br>" +
                         "To avoid any late fees, please return the book at your earliest convenience." +

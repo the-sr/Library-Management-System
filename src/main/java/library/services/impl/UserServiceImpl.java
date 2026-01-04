@@ -32,7 +32,6 @@ import library.utils.EmailService;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,7 +64,7 @@ public class UserServiceImpl implements UserService {
         user = userRepo.save(user);
         new Thread(() -> {
             String otp = otpService.generateOtp(req.getEmail());
-            String body = "<b>Dear " + req.getFirstName() + ",</b></br>" +
+            String body = "<b>Dear " + req.getName() + ",</b></br>" +
                     "</br><b>Hello and Welcome !</b></br></br>" +
                     "</br>To complete your account verification, please use the One-Time Password (OTP) below:</br></br><b>Your OTP: " + otp +
                     "</b></br>" + "</br>This OTP is valid for <b>5 minutes</b>. Please do not share it with anyone for security reasons.</br>" +
@@ -85,7 +84,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String activateAccount(OTPDto req) {
-        if (otpService.validateOtp(req.getIdentifier(), req.getOTP())) {
+        if (otpService.validateOtp(req.getIdentifier(), req.getOtp())) {
             User user = userRepo.findByEmail(req.getIdentifier()).orElseThrow(() -> new CustomException("User not Found", HttpStatus.NOT_FOUND));
             user.setIsActive(true);
             userRepo.save(user);
@@ -111,14 +110,39 @@ public class UserServiceImpl implements UserService {
         if (userDetails.isActive()) {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             final String token = jwtUtil.generateToken(userDetails);
-            return Map.of("token", token);
-        } else {
-            String otp = otpService.generateOtp(userDetails.getUsername());
-            String body = "Your one-time password (OTP) for activating your account is <b>" + otp +
-                    "</b>. This code will expire in 5 minutes. Please enter it promptly to complete your request.";
-            emailService.sendMail(userDetails.getUsername(), "Account activation Request", body);
-            throw new CustomException("Please check your email for OTP to activate your account", HttpStatus.FORBIDDEN);
+            return Map.of("token", token, "user", userRepo.findById(userDetails.getUserId()));
         }
+        throw new CustomException("Your account is not active. Please activate it.", HttpStatus.FORBIDDEN);
+    }
+
+    @Override
+    public String otp(OTPDto req) {
+        String otp = otpService.generateOtp(req.getIdentifier());
+        String body = "<b>Dear User,</b></br>" +
+                "</br>As per your request, here is yours One-Time Password (OTP) :</br></br><b>Your OTP: " + otp +
+                "</b></br>" + "</br>This OTP is valid for <b>5 minutes</b>. Please do not share it with anyone for security reasons.</br>" +
+                "</br>If you didn't request this, please ignore this email.";
+        emailService.sendMail(req.getIdentifier(), "One-Time Password (OTP)", body);
+        return "OTP has been successfully sent to your registered email";
+    }
+
+    @Override
+    public OTPDto validateOTP(OTPDto req) {
+        if (otpService.validateOtp(req.getIdentifier(), req.getOtp())) {
+            tokenMap.put(req.getIdentifier(), req.getIdentifier());
+            return OTPDto.builder().identifier(req.getIdentifier()).build();
+        } else throw new CustomException("OTP expired or not requested", HttpStatus.BAD_REQUEST);
+    }
+
+    @Override
+    public String forgotPassword(OTPDto req) {
+        if (userRepo.findByEmail(req.getIdentifier()).isPresent()) {
+            String otp = otpService.generateOtp(req.getIdentifier());
+            String body = "Your one-time password (OTP) for resetting your password is <b>" + otp +
+                    "</b>. This code will expire in 5 minutes. Please enter it promptly to complete your request.";
+            emailService.sendMail(req.getIdentifier(), "Forgot Password Request", body);
+        }
+        return "Please check you email for OPT to change password";
     }
 
     @Override
@@ -133,7 +157,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getProfile() {
-        User user= userRepo.findById(facade.getAuthentication().getUserId()).orElseThrow(()->new CustomException("User not found"));
+        User user = userRepo.findById(facade.getAuthentication().getUserId()).orElseThrow(() -> new CustomException("User not found"));
         return userMapper.entityToDto(user);
     }
 
@@ -162,12 +186,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto updateProfile(UserDto req) {
-        if(!Objects.equals(req.getId(), facade.getAuthentication().getUserId()))
+        if (!Objects.equals(req.getId(), facade.getAuthentication().getUserId()))
             throw new CustomException("Invalid request");
         User user = userRepo.findById(req.getId()).orElseThrow(() -> new CustomException("User Not Found", HttpStatus.NOT_FOUND));
-        user.setFirstName(req.getFirstName());
-        user.setMiddleName(req.getMiddleName());
-        user.setLastName(req.getLastName());
+        user.setName(req.getName());
         if (userRepo.findByEmail(req.getEmail()).isPresent())
             throw new CustomException("Email already registered", HttpStatus.BAD_REQUEST);
         user.setEmail(req.getEmail());
@@ -177,32 +199,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String forgotPassword(OTPDto req) {
-        if (userRepo.findByEmail(req.getIdentifier()).isPresent()) {
-            String otp = otpService.generateOtp(req.getIdentifier());
-            String body = "Your one-time password (OTP) for resetting your password is <b>" + otp +
-                    "</b>. This code will expire in 5 minutes. Please enter it promptly to complete your request.";
-            emailService.sendMail(req.getIdentifier(), "Forgot Password Request", body);
-        }
-        return "Please check you email for OPT to change password";
-    }
-
-    @Override
-    public OTPDto validateOTP(OTPDto req) {
-        if(otpService.validateOtp(req.getIdentifier(),req.getOTP())){
-            tokenMap.put(req.getIdentifier(), req.getIdentifier());
-            return OTPDto.builder().identifier(req.getIdentifier()).build();
-        }else throw new CustomException("OTP expired or not requested", HttpStatus.BAD_REQUEST);
-    }
-
-    @Override
     public String resetPassword(PasswordDto req) {
         if (tokenMap.containsKey(req.getIdentifier())) {
-                User user = userRepo.findByUsername(req.getIdentifier()).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
-                user.setPassword(new BCryptPasswordEncoder().encode(req.getNewPassword()));
-                userRepo.save(user);
-                tokenMap.remove(req.getIdentifier());
-                return "Password changed successfully";
+            User user = userRepo.findByUsername(req.getIdentifier()).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+            user.setPassword(new BCryptPasswordEncoder().encode(req.getNewPassword()));
+            userRepo.save(user);
+            tokenMap.remove(req.getIdentifier());
+            return "Password changed successfully";
         } else throw new CustomException("Invalid request", HttpStatus.BAD_REQUEST);
     }
 

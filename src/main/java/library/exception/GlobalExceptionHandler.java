@@ -19,7 +19,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorMessage> handleException(CustomException e) {
         log.error("Error: {}", e.getMessage());
-        return ResponseEntity.status(e.getStatusCode()).body(e.getErrorMessage());
+        return ResponseEntity.status(e.getStatusCode()).body(ErrorMessage.builder()
+                .error(e.getMessage())
+                .build());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -30,8 +32,7 @@ public class GlobalExceptionHandler {
         log.error("Error: {}", message);
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ErrorMessage.builder()
-                        .statusCode(HttpStatus.CONFLICT.value())
-                        .message(message)
+                        .error(message)
                         .build()
                 );
     }
@@ -45,8 +46,7 @@ public class GlobalExceptionHandler {
         log.error("Error: {}", message);
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(ErrorMessage.builder()
-                        .statusCode(HttpStatus.METHOD_NOT_ALLOWED.value())
-                        .message(String.valueOf(message))
+                        .error(String.valueOf(message))
                         .build()
                 );
     }
@@ -57,8 +57,7 @@ public class GlobalExceptionHandler {
         log.error("Error: {}", message);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorMessage.builder()
-                        .statusCode(HttpStatus.UNAUTHORIZED.value())
-                        .message(message)
+                        .error(message)
                         .build()
                 );
     }
@@ -69,8 +68,7 @@ public class GlobalExceptionHandler {
         log.error("Error: {}", message);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorMessage.builder()
-                        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                        .message(message)
+                        .error(message)
                         .build()
                 );
     }

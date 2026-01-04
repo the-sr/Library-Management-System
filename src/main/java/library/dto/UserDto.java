@@ -19,13 +19,8 @@ public class UserDto {
 
     private Long id;
 
-    @NotEmpty(message = "First name cannot be blank")
-    private String firstName;
-
-    private String middleName;
-
-    @NotEmpty(message = "Last name cannot be blank")
-    private String lastName;
+    @NotEmpty(message = "Please enter a valid name")
+    private String name;
 
     @Email(message = "Invalid Email")
     private String email;

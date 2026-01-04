@@ -13,6 +13,14 @@ public interface UserService {
 
     Object signIn(LoginDto req);
 
+    String otp(OTPDto req);
+
+    OTPDto validateOTP(OTPDto req);
+
+    String forgotPassword(OTPDto req);
+
+    String resetPassword(PasswordDto req);
+
     String addProfilePicture(Long userId, MultipartFile profilePicture);
 
     UserDto getProfile();
@@ -26,12 +34,6 @@ public interface UserService {
     String deleteById(long id);
 
     UserDto updateProfile(UserDto req);
-
-    String forgotPassword(OTPDto req);
-
-    OTPDto validateOTP(OTPDto req);
-
-    String resetPassword(PasswordDto req);
 
     String updatePassword(PasswordDto req);
 

@@ -1,14 +1,9 @@
 package library.controller;
 
 import jakarta.validation.Valid;
-import library.dto.OTPDto;
-import library.dto.PasswordDto;
-import library.dto.UserDto;
-import library.dto.LoginDto;
+import library.dto.*;
 import library.services.UserService;
-import library.utils.OtpService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,41 +13,40 @@ import org.springframework.web.bind.annotation.*;
 public class PublicController {
 
     private final UserService userService;
-    private final OtpService otpService;
 
     @PostMapping("/sign-up")
     public ResponseEntity<?> signUp(@Valid @RequestBody UserDto req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.signUp(req));
+        return ResponseEntity.ok(ResponseDto.builder().message(userService.signUp(req)).build());
     }
 
     @PostMapping("/activate-account")
     public ResponseEntity<?> activateAccount(@RequestBody OTPDto req) {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.activateAccount(req));
+        return ResponseEntity.ok(ResponseDto.builder().message(userService.activateAccount(req)).build());
     }
 
     @PostMapping("/sign-in")
     public ResponseEntity<?> signIn(@RequestBody LoginDto req) {
-        return ResponseEntity.status(HttpStatus.OK).body(userService.signIn(req));
+        return ResponseEntity.ok(ResponseDto.builder().data(userService.signIn(req)).build());
     }
 
-    @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody OTPDto req){
-        return ResponseEntity.ok().body(userService.forgotPassword(req));
+    @PostMapping("/otp")
+    public ResponseEntity<?> resendOTP(@RequestBody OTPDto req) {
+        return ResponseEntity.ok(ResponseDto.builder().message(userService.otp(req)).build());
     }
 
     @PostMapping("/validate-otp")
-    public ResponseEntity<?> validateOTP(@RequestBody OTPDto req){
-        return ResponseEntity.ok().body(userService.validateOTP(req));
+    public ResponseEntity<?> validateOTP(@RequestBody OTPDto req) {
+        return ResponseEntity.ok(ResponseDto.builder().data(userService.validateOTP(req)).build());
     }
 
-    @PostMapping("/resend-otp")
-    public ResponseEntity<?> resendOTP(@RequestBody OTPDto req){
-        return ResponseEntity.ok().body(otpService.generateOtp(req.getIdentifier()));
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody OTPDto req) {
+        return ResponseEntity.ok(ResponseDto.builder().message(userService.forgotPassword(req)).build());
     }
 
     @PutMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody PasswordDto req) {
-        return ResponseEntity.ok().body(userService.resetPassword(req));
+        return ResponseEntity.ok(ResponseDto.builder().message(userService.resetPassword(req)).build());
     }
 
 }

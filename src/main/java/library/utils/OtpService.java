@@ -33,19 +33,10 @@ public class OtpService {
         Map<String, Object> otpDetails = otpMap.get(identifier);
         if (otpDetails == null || isExpired(otpDetails.get("creationTime"))) return false;
         else {
-            if (Objects.equals(otp, otpDetails.get("otp"))) {
+            if (Objects.equals(otp, String.valueOf(otpDetails.get("otp")))) {
                 otpMap.remove(identifier);
                 return true;
             } else throw new CustomException("Invalid OTP. Please try again");
-        }
-    }
-
-    public void removeExpiredOtp() {
-        if (!otpMap.isEmpty()) {
-            otpMap.entrySet().removeIf(entry -> {
-                Map<String, Object> otpDetails = entry.getValue();
-                return isExpired(otpDetails.get("creationTime"));
-            });
         }
     }
 

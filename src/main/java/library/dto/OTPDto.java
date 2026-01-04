@@ -9,7 +9,6 @@ import lombok.*;
 @NoArgsConstructor
 
 public class OTPDto {
-    private String OTP;
+    private String otp;
     private String identifier;
-//    private String requestToken;
 }

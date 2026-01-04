@@ -14,6 +14,8 @@ public interface UserMapper extends MapperInterface<User, UserDto> {
 
     @Mapping(target = "password", qualifiedByName = "encodePassword")
     @Mapping(target = "role", qualifiedByName = "setRoles")
+    @Mapping(target = "name", qualifiedByName = "trimString")
+    @Mapping(target = "email", qualifiedByName = "trimString")
     User dtoToEntity(UserDto userDto);
 
     @Mapping(target = "password", ignore = true)
@@ -27,6 +29,11 @@ public interface UserMapper extends MapperInterface<User, UserDto> {
 
     @Named("setRoles")
     default Role setRoles(Role role) {
-       return (role!=null)? role: Role.MEMBER;
+        return (role != null) ? role : Role.MEMBER;
+    }
+
+    @Named("trimString")
+    default String trimString(String text) {
+        return text.trim();
     }
 }

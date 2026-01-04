@@ -13,8 +13,7 @@ public class CustomException extends RuntimeException {
         super(message);
         statusCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
         errorMessage = ErrorMessage.builder()
-                .message(message)
-                .statusCode(statusCode)
+                .error(message)
                 .build();
     }
 
@@ -22,8 +21,7 @@ public class CustomException extends RuntimeException {
         super(message);
         statusCode = httpStatus.value();
         errorMessage = ErrorMessage.builder()
-                .message(message)
-                .statusCode(statusCode)
+                .error(message)
                 .build();
     }
 
@@ -31,8 +29,7 @@ public class CustomException extends RuntimeException {
         super(message);
         this.statusCode = statusCode;
         errorMessage = ErrorMessage.builder()
-                .message(message)
-                .statusCode(statusCode)
+                .error(message)
                 .build();
     }
 }
