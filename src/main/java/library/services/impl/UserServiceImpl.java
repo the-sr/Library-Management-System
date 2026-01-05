@@ -146,7 +146,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String addProfilePicture(Long userId, MultipartFile profilePicture) {
+    public String resetPassword(PasswordDto req) {
+        if (tokenMap.containsKey(req.getIdentifier())) {
+            User user = userRepo.findByUsername(req.getIdentifier()).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
+            user.setPassword(new BCryptPasswordEncoder().encode(req.getNewPassword()));
+            userRepo.save(user);
+            tokenMap.remove(req.getIdentifier());
+            return "Password changed successfully";
+        } else throw new CustomException("Invalid request", HttpStatus.BAD_REQUEST);
+    }
+
+    @Override
+    public String addProfilePicture(MultipartFile profilePicture) {
+        long userId=facade.getAuthentication().getUserId();
         String filename = fileService.saveFile(profilePicture);
         return userRepo.findById(userId).map(u -> {
             u.setProfilePicture(filename);
@@ -181,7 +193,14 @@ public class UserServiceImpl implements UserService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
         Page<User> users = userRepo.findAllPagewiseByIsActive(pageable, status);
         List<UserDto> res = users.stream().map(userMapper::entityToDto).collect(Collectors.toList());
-        return PageWiseResDto.<UserDto>builder().res(res).totalPages(users.getTotalPages()).totalElements(users.getTotalElements()).currentPage(users.getNumber()).pageSize(users.getSize()).isLast(users.isLast()).build();
+        return PageWiseResDto.<UserDto>builder()
+                .res(res)
+                .totalPages(users.getTotalPages())
+                .totalElements(users.getTotalElements())
+                .currentPage(users.getNumber())
+                .pageSize(users.getSize())
+                .isLast(users.isLast())
+                .build();
     }
 
     @Override
@@ -196,17 +215,6 @@ public class UserServiceImpl implements UserService {
         user.setPhone(req.getPhone());
         user.setUpdatedDate(LocalDate.now());
         return userMapper.entityToDto(userRepo.save(user));
-    }
-
-    @Override
-    public String resetPassword(PasswordDto req) {
-        if (tokenMap.containsKey(req.getIdentifier())) {
-            User user = userRepo.findByUsername(req.getIdentifier()).orElseThrow(() -> new CustomException("User not found", HttpStatus.NOT_FOUND));
-            user.setPassword(new BCryptPasswordEncoder().encode(req.getNewPassword()));
-            userRepo.save(user);
-            tokenMap.remove(req.getIdentifier());
-            return "Password changed successfully";
-        } else throw new CustomException("Invalid request", HttpStatus.BAD_REQUEST);
     }
 
     @Override

@@ -38,7 +38,7 @@ public class FileServiceImpl implements FileService {
         }
         String fileName = file.getOriginalFilename();
         String ext = fileName.substring(fileName.lastIndexOf(".")+1);
-        if(!ALLOWED_EXTENSIONS.contains(ext))
+        if(!ALLOWED_EXTENSIONS.contains(ext.toLowerCase()))
             throw new CustomException("Invalid file type. Allowed extension are "+ ALLOWED_EXTENSIONS, HttpStatus.BAD_REQUEST);
         String newFileName=System.currentTimeMillis()+"."+ext;
         Path path= Paths.get(multipartLocation,newFileName);

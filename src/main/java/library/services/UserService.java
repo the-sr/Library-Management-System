@@ -21,7 +21,7 @@ public interface UserService {
 
     String resetPassword(PasswordDto req);
 
-    String addProfilePicture(Long userId, MultipartFile profilePicture);
+    String addProfilePicture(MultipartFile profilePicture);
 
     UserDto getProfile();
 
@@ -31,10 +31,10 @@ public interface UserService {
 
     PageWiseResDto<UserDto> getAllUsers(Integer pageNumber, Integer pageSize, String sortBy, String sortDirection, Boolean status);
 
-    String deleteById(long id);
-
     UserDto updateProfile(UserDto req);
 
     String updatePassword(PasswordDto req);
+
+    String deleteById(long id);
 
 }
