@@ -27,15 +27,15 @@ public class EmailService {
 
     private String message = "Sent";
     private boolean status;
-    @Value("${email-sender}")
+    @Value("${email.sender}")
     private String sender;
-    @Value("${email-password}")
+    @Value("${email.password}")
     private String password;
-    @Value("${email-smtpHost}")
+    @Value("${email.smtpHost}")
     private String smtpHost;
-    @Value("${email-smtpPort}")
+    @Value("${email.smtpPort}")
     private String smtpPort;
-    @Value("${email-emailSignature}")
+    @Value("${email.emailSignature}")
     private String emailSignature;
 
     @PostConstruct
