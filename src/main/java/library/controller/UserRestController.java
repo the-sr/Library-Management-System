@@ -1,6 +1,7 @@
 package library.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import library.dto.PasswordDto;
 import library.dto.ResponseDto;
 import library.dto.UserDto;
@@ -18,6 +19,13 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserRestController {
 
     private final UserService userService;
+
+    @Operation(summary = "Create user (Admin only)")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/user/create")
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserDto req) {
+        return ResponseEntity.ok(ResponseDto.builder().message(userService.createUserByAdmin(req)).build());
+    }
 
     @PostMapping(value = "/user/add-profile-picture")
     public ResponseEntity<?> addProfilePicture(@RequestPart MultipartFile profilePicture) {

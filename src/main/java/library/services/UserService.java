@@ -9,6 +9,8 @@ public interface UserService {
 
     String signUp(UserDto req);
 
+    String createUserByAdmin(UserDto req);
+
     String activateAccount(OTPDto req);
 
     Object signIn(LoginDto req);

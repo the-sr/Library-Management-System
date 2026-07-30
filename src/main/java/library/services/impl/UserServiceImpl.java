@@ -9,6 +9,7 @@ import library.services.FileService;
 import library.utils.OtpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,8 @@ import library.services.mappers.UserMapper;
 import library.utils.EmailService;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.annotation.PostConstruct;
+
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -52,7 +55,33 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationFacade facade;
     private final PasswordEncoder encoder;
 
+    @Value("${admin.name}")
+    private String adminName;
+
+    @Value("${admin.email}")
+    private String adminEmail;
+
+    @Value("${admin.password}")
+    private String adminPassword;
+
     private static final Map<String, String> tokenMap = new HashMap<>();
+
+    @PostConstruct
+    public void initAdmin() {
+        if (userRepo.findByEmail(adminEmail).isEmpty()) {
+            User admin = User.builder()
+                    .name(adminName)
+                    .email(adminEmail)
+                    .password(encoder.encode(adminPassword))
+                    .role(library.enums.Role.ADMIN)
+                    .isActive(false)
+                    .build();
+            User saved = userRepo.save(admin);
+            saved.setIsActive(true);
+            userRepo.save(saved);
+            log.info("Default admin created — email: {}, password: {}", adminEmail, adminPassword);
+        }
+    }
 
     @Override
     public String signUp(UserDto req) {
@@ -80,6 +109,20 @@ public class UserServiceImpl implements UserService {
         }
         log.info("User created successfully");
         return "Please check you email for OPT to verify your account and proceed further";
+    }
+
+    @Override
+    public String createUserByAdmin(UserDto req) {
+        if (userRepo.findByEmail(req.getEmail()).isPresent())
+            throw new CustomException("Email already registered. Please use a different email address.", 409);
+        if (!req.getPassword().equals(req.getConfirmPassword()))
+            throw new CustomException("Confirm Password and Password must be same", 400);
+        User user = userMapper.dtoToEntity(req);
+        User saved = userRepo.save(user);
+        saved.setIsActive(true);
+        userRepo.save(saved);
+        log.info("User created by admin: {}", req.getEmail());
+        return "User created successfully. Share the credentials with the user.";
     }
 
     @Override
@@ -112,7 +155,7 @@ public class UserServiceImpl implements UserService {
             final String token = jwtUtil.generateToken(userDetails);
             return Map.of("token", token, "user", userRepo.findById(userDetails.getUserId()));
         }
-        throw new CustomException("Your account is not active. Please activate it.", HttpStatus.FORBIDDEN);
+        return Map.of("isActive", false, "error", "Your account is not active. Please activate it.");
     }
 
     @Override
