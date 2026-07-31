@@ -74,11 +74,9 @@ public class UserServiceImpl implements UserService {
                     .email(adminEmail)
                     .password(encoder.encode(adminPassword))
                     .role(library.enums.Role.ADMIN)
-                    .isActive(false)
+                    .isActive(true)
                     .build();
-            User saved = userRepo.save(admin);
-            saved.setIsActive(true);
-            userRepo.save(saved);
+            userRepo.save(admin);
             log.info("Default admin created — email: {}, password: {}", adminEmail, adminPassword);
         }
     }
@@ -90,6 +88,8 @@ public class UserServiceImpl implements UserService {
         if (!req.getPassword().equals(req.getConfirmPassword()))
             throw new CustomException("Confirm Password and Password must be same", 400);
         User user = userMapper.dtoToEntity(req);
+        user.setRole(library.enums.Role.MEMBER);
+        user.setIsActive(false);
         user = userRepo.save(user);
         new Thread(() -> {
             String otp = otpService.generateOtp(req.getEmail());
@@ -118,9 +118,8 @@ public class UserServiceImpl implements UserService {
         if (!req.getPassword().equals(req.getConfirmPassword()))
             throw new CustomException("Confirm Password and Password must be same", 400);
         User user = userMapper.dtoToEntity(req);
-        User saved = userRepo.save(user);
-        saved.setIsActive(true);
-        userRepo.save(saved);
+        user.setIsActive(true);
+        userRepo.save(user);
         log.info("User created by admin: {}", req.getEmail());
         return "User created successfully. Share the credentials with the user.";
     }
@@ -153,7 +152,8 @@ public class UserServiceImpl implements UserService {
         if (userDetails.isActive()) {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             final String token = jwtUtil.generateToken(userDetails);
-            return Map.of("token", token, "user", userRepo.findById(userDetails.getUserId()));
+            User user = userRepo.findById(userDetails.getUserId()).orElse(null);
+            return Map.of("token", token, "user", user);
         }
         return Map.of("isActive", false, "error", "Your account is not active. Please activate it.");
     }
@@ -252,7 +252,7 @@ public class UserServiceImpl implements UserService {
             throw new CustomException("Invalid request");
         User user = userRepo.findById(req.getId()).orElseThrow(() -> new CustomException("User Not Found", HttpStatus.NOT_FOUND));
         user.setName(req.getName());
-        if (userRepo.findByEmail(req.getEmail()).isPresent())
+        if (userRepo.findByEmail(req.getEmail()).filter(u -> !u.getId().equals(req.getId())).isPresent())
             throw new CustomException("Email already registered", HttpStatus.BAD_REQUEST);
         user.setEmail(req.getEmail());
         user.setPhone(req.getPhone());

@@ -76,6 +76,7 @@ public class UserRestController {
     }
 
     @Operation(summary = "Delete user by ID")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("user/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable long id) {
         return ResponseEntity.ok(ResponseDto.builder().message(userService.deleteById(id)).build());

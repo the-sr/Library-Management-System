@@ -23,7 +23,7 @@ public class FileServiceImpl implements FileService {
     @Value("${multipart-location}")
     private String multipartLocation;
 
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg","jpeg","png");
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg","jpeg","png","pdf");
 
     @Override
     public String saveFile(MultipartFile file) {
@@ -59,5 +59,16 @@ public class FileServiceImpl implements FileService {
             throw new CustomException("File not found", HttpStatus.NOT_FOUND);
         }
         return resource;
+    }
+
+    @Override
+    public void deleteFile(String fileName) {
+        if (fileName == null || fileName.isBlank()) return;
+        Path path = Paths.get(multipartLocation, fileName);
+        try {
+            Files.deleteIfExists(path);
+        } catch (Exception e) {
+            log.error("Error deleting file: {}", e.getMessage());
+        }
     }
 }

@@ -13,14 +13,14 @@ import {
   Button,
   IconButton,
   Tooltip,
+  Avatar,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Pagination from "../../components/common/Pagination";
 import ConfirmDialog from "../../components/common/ConfirmDialog";
 import useUiStore from "../../stores/uiStore";
-import { getUserBooks, handleBorrowRequest, handleReturnRequest } from "../../api/userBooks";
+import { getUserBooks, handleBorrowRequest } from "../../api/userBooks";
 import { formatDate } from "../../utils/format";
 
 const BorrowRequests = () => {
@@ -69,7 +69,14 @@ const BorrowRequests = () => {
         <LoadingSpinner />
       ) : requests.length > 0 ? (
         <>
-          <TableContainer component={Paper}>
+          <TableContainer
+            component={Paper}
+            sx={{
+              "& .MuiTableCell-root": { py: 1.5 },
+              "& .MuiTableRow-root:nth-of-type(odd)": { bgcolor: "grey.50" },
+              "& .MuiTableRow-root:hover": { bgcolor: "primary.main", color: "#fff", "& .MuiTableCell-root": { color: "#fff" } },
+            }}
+          >
             <Table>
               <TableHead>
                 <TableRow>
@@ -83,17 +90,27 @@ const BorrowRequests = () => {
               <TableBody>
                 {requests.map((req) => (
                   <TableRow key={req.id}>
-                    <TableCell>{req.user?.name || "User"}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: "warning.main", fontWeight: 700, fontSize: "0.8rem" }}>
+                          {req.user?.name?.charAt(0)?.toUpperCase()}
+                        </Avatar>
+                        <Typography fontWeight={500}>{req.user?.name || "User"}</Typography>
+                      </Box>
+                    </TableCell>
                     <TableCell>{req.book?.title || "Book"}</TableCell>
                     <TableCell>{formatDate(req.borrowedDate)}</TableCell>
                     <TableCell>
-                      <Chip label={req.requestType} color="warning" size="small" />
+                      <Chip label="Pending" color="warning" size="small" sx={{ fontWeight: 600 }} />
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="Approve">
                         <IconButton
                           color="success"
                           onClick={() => setConfirmAction({ type: "borrow", id: req.id })}
+                          sx={{
+                            "&:hover": { bgcolor: "success.main", color: "#fff" },
+                          }}
                         >
                           <CheckCircleIcon />
                         </IconButton>
@@ -107,7 +124,9 @@ const BorrowRequests = () => {
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       ) : (
-        <Typography color="text.secondary">No pending borrow requests</Typography>
+        <Paper sx={{ p: 6, textAlign: "center" }}>
+          <Typography color="text.secondary" variant="h6">No pending borrow requests</Typography>
+        </Paper>
       )}
 
       <ConfirmDialog

@@ -11,6 +11,7 @@ import library.models.BookGenre;
 import library.repository.*;
 import library.services.AuthorService;
 import library.services.BookService;
+import library.services.FileService;
 import library.services.GenreService;
 import library.services.mappers.AuthorMapper;
 import library.services.mappers.BookMapper;
@@ -24,8 +25,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,12 +49,24 @@ public class BookServiceImpl implements BookService {
     private final PreferredGenreRepo preferredGenreRepo;
     private final SimpMessagingTemplate messagingTemplate;
     private final PreferredAuthorRepo preferredAuthorRepo;
+    private final FileService fileService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public String add(BookDto req) {
+    public String add(BookDto req, MultipartFile image, MultipartFile pdf) {
         Book book = bookRepo.save(bookMapper.dtoToEntity(req));
         saveBookAuthor(book.getId(), req.getAuthors());
         saveBookGenre(book.getId(), req.getGenre());
+        if (image != null && !image.isEmpty()) {
+            String fileName = fileService.saveFile(image);
+            book.setImages(toJson(List.of(fileName)));
+            bookRepo.save(book);
+        }
+        if (pdf != null && !pdf.isEmpty()) {
+            String fileName = fileService.saveFile(pdf);
+            book.setPdfPath(fileName);
+            bookRepo.save(book);
+        }
         return "Book added successfully";
     }
 
@@ -161,13 +177,29 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public String updateById(BookDto req) {
+    public String updateById(BookDto req, MultipartFile image, MultipartFile pdf) {
         Book book = bookRepo.findById(req.getId()).orElseThrow(() -> new CustomException("Book not found", HttpStatus.NOT_FOUND));
         book.setIsbn(req.getIsbn());
         book.setTitle(req.getTitle());
         book.setEdition(req.getEdition());
         book.setPublisher(req.getPublisher());
         book.setBookCount(req.getBookCount());
+
+        if (image != null && !image.isEmpty()) {
+            deleteExistingImages(book);
+            String fileName = fileService.saveFile(image);
+            book.setImages(toJson(List.of(fileName)));
+        }
+
+        if (pdf != null && !pdf.isEmpty()) {
+            if (book.getPdfPath() != null) {
+                fileService.deleteFile(book.getPdfPath());
+            }
+            String fileName = fileService.saveFile(pdf);
+            book.setPdfPath(fileName);
+        }
+
+        bookRepo.save(book);
         return "Book updated successfully";
     }
 
@@ -203,6 +235,35 @@ public class BookServiceImpl implements BookService {
             throw new CustomException("Book not found", HttpStatus.NOT_FOUND);
         bookGenreRepo.deleteByBookIdAndGenreId(bookId, genreId);
         return "Genre removed from the book successfully";
+    }
+
+    @Override
+    public String removeImage(Long bookId) {
+        Book book = bookRepo.findById(bookId)
+                .orElseThrow(() -> new CustomException("Book not found", HttpStatus.NOT_FOUND));
+        deleteExistingImages(book);
+        book.setImages(null);
+        bookRepo.save(book);
+        return "Image removed successfully";
+    }
+
+    @Override
+    public String removePdf(Long bookId) {
+        Book book = bookRepo.findById(bookId)
+                .orElseThrow(() -> new CustomException("Book not found", HttpStatus.NOT_FOUND));
+        if (book.getPdfPath() != null) {
+            fileService.deleteFile(book.getPdfPath());
+            book.setPdfPath(null);
+            bookRepo.save(book);
+        }
+        return "PDF removed successfully";
+    }
+
+    private void deleteExistingImages(Book book) {
+        List<String> existing = parseImages(book.getImages());
+        for (String fileName : existing) {
+            fileService.deleteFile(fileName);
+        }
     }
 
     private void saveBookAuthor(Long bookId, List<AuthorDto> authorDtoList) {
@@ -257,5 +318,23 @@ public class BookServiceImpl implements BookService {
         bookGenreList.parallelStream().forEach(bookGenre ->
                 genreDtoList.add(genreMapper.entityToDto(bookGenre.getGenre())));
         return genreDtoList;
+    }
+
+    private List<String> parseImages(String imagesJson) {
+        if (imagesJson == null || imagesJson.isBlank()) return new ArrayList<>();
+        try {
+            return objectMapper.readValue(imagesJson, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    private String toJson(List<String> list) {
+        if (list == null || list.isEmpty()) return null;
+        try {
+            return objectMapper.writeValueAsString(list);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

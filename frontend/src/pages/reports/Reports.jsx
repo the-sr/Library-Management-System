@@ -7,10 +7,13 @@ import {
   Grid,
   TextField,
   MenuItem,
-  Alert,
+  Card,
+  CardContent,
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import AssessmentIcon from "@mui/icons-material/Assessment";
+import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
+import PersonIcon from "@mui/icons-material/Person";
 import useUiStore from "../../stores/uiStore";
 import {
   generateLibraryReport,
@@ -70,27 +73,89 @@ const Reports = () => {
       <Typography variant="h4" gutterBottom>
         Reports
       </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        Generate and download reports for the library
+      </Typography>
 
-      <Paper sx={{ p: 4, maxWidth: 500 }}>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Card
+            sx={{
+              cursor: "pointer",
+              border: "2px solid",
+              borderColor: reportType === "library" ? "primary.main" : "grey.200",
+              transition: "all 0.2s",
+              "&:hover": { borderColor: "primary.light" },
+            }}
+            onClick={() => setReportType("library")}
+          >
+            <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 3,
+                  bgcolor: "primary.main",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <LibraryBooksIcon sx={{ color: "#fff", fontSize: 28 }} />
+              </Box>
+              <Box>
+                <Typography variant="h6" fontWeight={700}>Library Summary</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Complete library report with books, borrows, and stats
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card
+            sx={{
+              cursor: "pointer",
+              border: "2px solid",
+              borderColor: reportType === "user" ? "primary.main" : "grey.200",
+              transition: "all 0.2s",
+              "&:hover": { borderColor: "primary.light" },
+            }}
+            onClick={() => setReportType("user")}
+          >
+            <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 3,
+                  bgcolor: "secondary.main",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <PersonIcon sx={{ color: "#fff", fontSize: 28 }} />
+              </Box>
+              <Box>
+                <Typography variant="h6" fontWeight={700}>User Report</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Individual user borrowing history and activity
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Paper sx={{ p: 4, mt: 3, maxWidth: 500 }}>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 3 }}>
-          <AssessmentIcon color="primary" sx={{ fontSize: 32 }} />
-          <Typography variant="h6">Generate Report</Typography>
+          <AssessmentIcon color="primary" sx={{ fontSize: 28 }} />
+          <Typography variant="h6" fontWeight={700}>Generate Report</Typography>
         </Box>
 
         <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              select
-              label="Report Type"
-              value={reportType}
-              onChange={(e) => setReportType(e.target.value)}
-            >
-              <MenuItem value="library">Library Summary</MenuItem>
-              <MenuItem value="user">User Report</MenuItem>
-            </TextField>
-          </Grid>
-
           {reportType === "user" && (
             <Grid item xs={12}>
               <TextField
@@ -99,6 +164,7 @@ const Reports = () => {
                 type="number"
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
+                size="small"
               />
             </Grid>
           )}
@@ -110,6 +176,7 @@ const Reports = () => {
               label="Format"
               value={format}
               onChange={(e) => setFormat(e.target.value)}
+              size="small"
             >
               {formats.map((f) => (
                 <MenuItem key={f.value} value={f.value}>
@@ -126,6 +193,7 @@ const Reports = () => {
               onClick={handleGenerate}
               disabled={loading}
               fullWidth
+              size="large"
             >
               {loading ? "Generating..." : "Download Report"}
             </Button>
