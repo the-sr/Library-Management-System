@@ -15,6 +15,7 @@ import {
   MenuItem,
   IconButton,
   Tooltip,
+  Avatar,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -82,6 +83,7 @@ const UserList = () => {
         label="Filter by Status"
         value={statusFilter}
         onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
+        size="small"
         sx={{ mb: 3, minWidth: 200 }}
       >
         <MenuItem value="">All</MenuItem>
@@ -93,12 +95,18 @@ const UserList = () => {
         <LoadingSpinner />
       ) : (
         <>
-          <TableContainer component={Paper}>
+          <TableContainer
+            component={Paper}
+            sx={{
+              "& .MuiTableCell-root": { py: 1.5 },
+              "& .MuiTableRow-root:nth-of-type(odd)": { bgcolor: "grey.50" },
+              "& .MuiTableRow-root:hover": { bgcolor: "primary.main", color: "#fff", "& .MuiTableCell-root": { color: "#fff" } },
+            }}
+          >
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Name</TableCell>
+                  <TableCell>User</TableCell>
                   <TableCell>Email</TableCell>
                   <TableCell>Role</TableCell>
                   <TableCell>Status</TableCell>
@@ -110,30 +118,37 @@ const UserList = () => {
               <TableBody>
                 {users.map((u) => (
                   <TableRow key={u.id}>
-                    <TableCell>{u.id}</TableCell>
-                    <TableCell>{u.name}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <Avatar sx={{ width: 34, height: 34, bgcolor: `${roleColor(u.role)}.main`, fontWeight: 700, fontSize: "0.85rem" }}>
+                          {u.name?.charAt(0)?.toUpperCase()}
+                        </Avatar>
+                        <Typography fontWeight={500}>{u.name}</Typography>
+                      </Box>
+                    </TableCell>
                     <TableCell>{u.email}</TableCell>
                     <TableCell>
-                      <Chip label={u.role} color={roleColor(u.role)} size="small" />
+                      <Chip label={u.role} color={roleColor(u.role)} size="small" sx={{ fontWeight: 600 }} />
                     </TableCell>
                     <TableCell>
                       <Chip
                         label={u.isActive ? "Active" : "Inactive"}
                         color={u.isActive ? "success" : "default"}
                         size="small"
+                        variant={u.isActive ? "filled" : "outlined"}
                       />
                     </TableCell>
                     <TableCell>{u.borrowedBookCount || 0}</TableCell>
                     <TableCell>{formatDate(u.createdDate)}</TableCell>
                     <TableCell align="right">
                       <Tooltip title="View">
-                        <IconButton size="small" onClick={() => navigate(`/users/${u.id}`)}>
-                          <VisibilityIcon />
+                        <IconButton size="small" onClick={() => navigate(`/users/${u.id}`)} color="primary">
+                          <VisibilityIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Deactivate">
                         <IconButton size="small" color="error" onClick={() => setDeleteId(u.id)}>
-                          <DeleteIcon />
+                          <DeleteIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
                     </TableCell>

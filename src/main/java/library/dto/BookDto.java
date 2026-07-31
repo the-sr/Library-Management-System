@@ -34,6 +34,10 @@ public class BookDto {
     @Max(5)
     private Float averageRating;
 
+    private String images;
+
+    private String pdfPath;
+
     @NotNull(message = "Author Details is required")
     private List<AuthorDto> authors;
 

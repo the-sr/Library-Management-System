@@ -4,13 +4,14 @@ import library.dto.AuthorDto;
 import library.dto.BookDto;
 import library.dto.GenreDto;
 import library.dto.PageWiseResDto;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Set;
 
 public interface BookService {
 
-    String add(BookDto req);
+    String add(BookDto req, MultipartFile image, MultipartFile pdf);
 
     BookDto findById(Long id);
 
@@ -26,7 +27,7 @@ public interface BookService {
 
     String removeById(Long id);
 
-    String updateById(BookDto req);
+    String updateById(BookDto req, MultipartFile image, MultipartFile pdf);
 
     String addBookAuthor(Long bookId, List<AuthorDto> req);
 
@@ -35,4 +36,8 @@ public interface BookService {
     String addBookGenre(Long bookId, List<GenreDto> req);
 
     String removeBookGenre(Long bookId, Long genreId);
+
+    String removeImage(Long bookId);
+
+    String removePdf(Long bookId);
 }

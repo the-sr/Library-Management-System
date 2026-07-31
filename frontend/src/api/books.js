@@ -16,9 +16,25 @@ export const getBooksByGenre = (genre) =>
 export const getPageWiseBooks = (params) =>
   api.get("/page-wise-books", { params });
 
-export const addBook = (data) => api.post("/add-book", data);
+export const addBook = (data, image, pdf) => {
+  const formData = new FormData();
+  formData.append("book", new Blob([JSON.stringify(data)], { type: "application/json" }));
+  if (image) formData.append("image", image);
+  if (pdf) formData.append("pdf", pdf);
+  return api.post("/add-book", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
 
-export const updateBook = (data) => api.put("/book", data);
+export const updateBook = (data, image, pdf) => {
+  const formData = new FormData();
+  formData.append("book", new Blob([JSON.stringify(data)], { type: "application/json" }));
+  if (image) formData.append("image", image);
+  if (pdf) formData.append("pdf", pdf);
+  return api.put("/book", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
 
 export const deleteBook = (id) => api.delete(`/book/${id}`);
 
@@ -33,3 +49,9 @@ export const addGenresToBook = (bookId, genres) =>
 
 export const removeGenreFromBook = (bookId, genreId) =>
   api.put(`/book/remove-genre`, null, { params: { bookId, genreId } });
+
+export const removeBookImage = (bookId) =>
+  api.delete(`/book/${bookId}/image`);
+
+export const removeBookPdf = (bookId) =>
+  api.delete(`/book/${bookId}/pdf`);

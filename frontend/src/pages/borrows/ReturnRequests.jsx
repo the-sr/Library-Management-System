@@ -12,6 +12,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Avatar,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -67,7 +68,14 @@ const ReturnRequests = () => {
         <LoadingSpinner />
       ) : requests.length > 0 ? (
         <>
-          <TableContainer component={Paper}>
+          <TableContainer
+            component={Paper}
+            sx={{
+              "& .MuiTableCell-root": { py: 1.5 },
+              "& .MuiTableRow-root:nth-of-type(odd)": { bgcolor: "grey.50" },
+              "& .MuiTableRow-root:hover": { bgcolor: "primary.main", color: "#fff", "& .MuiTableCell-root": { color: "#fff" } },
+            }}
+          >
             <Table>
               <TableHead>
                 <TableRow>
@@ -81,14 +89,21 @@ const ReturnRequests = () => {
               <TableBody>
                 {requests.map((req) => (
                   <TableRow key={req.id}>
-                    <TableCell>{req.user?.name || "User"}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: "info.main", fontWeight: 700, fontSize: "0.8rem" }}>
+                          {req.user?.name?.charAt(0)?.toUpperCase()}
+                        </Avatar>
+                        <Typography fontWeight={500}>{req.user?.name || "User"}</Typography>
+                      </Box>
+                    </TableCell>
                     <TableCell>{req.book?.title || "Book"}</TableCell>
                     <TableCell>{formatDate(req.borrowedDate)}</TableCell>
                     <TableCell>
                       {req.fineAmount > 0 ? (
-                        <Chip label={`$${req.fineAmount.toFixed(2)}`} color="error" size="small" />
+                        <Chip label={`$${req.fineAmount.toFixed(2)}`} color="error" size="small" sx={{ fontWeight: 600 }} />
                       ) : (
-                        <Chip label="None" color="success" size="small" />
+                        <Chip label="None" color="success" size="small" variant="outlined" />
                       )}
                     </TableCell>
                     <TableCell align="right">
@@ -96,6 +111,9 @@ const ReturnRequests = () => {
                         <IconButton
                           color="success"
                           onClick={() => setConfirmId(req.id)}
+                          sx={{
+                            "&:hover": { bgcolor: "success.main", color: "#fff" },
+                          }}
                         >
                           <CheckCircleIcon />
                         </IconButton>
@@ -109,7 +127,9 @@ const ReturnRequests = () => {
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </>
       ) : (
-        <Typography color="text.secondary">No pending return requests</Typography>
+        <Paper sx={{ p: 6, textAlign: "center" }}>
+          <Typography color="text.secondary" variant="h6">No pending return requests</Typography>
+        </Paper>
       )}
 
       <ConfirmDialog

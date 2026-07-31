@@ -10,30 +10,38 @@ import {
   Paper,
   Alert,
   Box,
-  MenuItem,
+  Grid,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
+import PersonIcon from "@mui/icons-material/Person";
+import EmailIcon from "@mui/icons-material/Email";
+import PhoneIcon from "@mui/icons-material/Phone";
+import LockIcon from "@mui/icons-material/Lock";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import AuthLayout from "../../components/layout/AuthLayout";
 import useUiStore from "../../stores/uiStore";
 import { signUp } from "../../api/auth";
 
-const schema = z
-  .object({
-    name: z.string().min(1, "Name is required"),
-    email: z.string().email("Enter a valid email"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string(),
-    phone: z.string().optional(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
+const schema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Enter a valid email"),
+  phone: z.string().optional(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(1, "Confirm your password"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { showSnackbar } = useUiStore();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -45,12 +53,12 @@ const SignUp = () => {
     setLoading(true);
     setError("");
     try {
-      const payload = { ...data, role: "MEMBER" };
+      const { confirmPassword, ...payload } = data;
       await signUp(payload);
-      showSnackbar("Account created! Check your email for OTP.", "success");
-      navigate("/verify-otp", { state: { identifier: data.email } });
+      showSnackbar("Account created! Please sign in.", "success");
+      navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.error || "Registration failed");
+      setError(err.response?.data?.error || "Sign up failed");
     } finally {
       setLoading(false);
     }
@@ -58,65 +66,143 @@ const SignUp = () => {
 
   return (
     <AuthLayout>
-      <Paper elevation={3} sx={{ p: 4, width: "100%" }}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Sign Up
+      <Paper
+        elevation={0}
+        sx={{
+          p: 4,
+          width: "100%",
+          border: "1px solid",
+          borderColor: "grey.200",
+        }}
+      >
+        <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 700 }}>
+          Create Account
         </Typography>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 3 }}>
+          Join the library today
+        </Typography>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-          <TextField
-            fullWidth
-            label="Full Name"
-            margin="normal"
-            {...register("name")}
-            error={!!errors.name}
-            helperText={errors.name?.message}
-          />
-          <TextField
-            fullWidth
-            label="Email"
-            margin="normal"
-            {...register("email")}
-            error={!!errors.email}
-            helperText={errors.email?.message}
-          />
-          <TextField
-            fullWidth
-            label="Phone (optional)"
-            margin="normal"
-            {...register("phone")}
-          />
-          <TextField
-            fullWidth
-            label="Password"
-            type="password"
-            margin="normal"
-            {...register("password")}
-            error={!!errors.password}
-            helperText={errors.password?.message}
-          />
-          <TextField
-            fullWidth
-            label="Confirm Password"
-            type="password"
-            margin="normal"
-            {...register("confirmPassword")}
-            error={!!errors.confirmPassword}
-            helperText={errors.confirmPassword?.message}
-          />
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Full Name"
+                {...register("name")}
+                error={!!errors.name}
+                helperText={errors.name?.message}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Email"
+                {...register("email")}
+                error={!!errors.email}
+                helperText={errors.email?.message}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Phone (optional)"
+                {...register("phone")}
+                error={!!errors.phone}
+                helperText={errors.phone?.message}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PhoneIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                {...register("password")}
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Confirm Password"
+                type="password"
+                {...register("confirmPassword")}
+                error={!!errors.confirmPassword}
+                helperText={errors.confirmPassword?.message}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+          </Grid>
+
           <Button
             fullWidth
             variant="contained"
             type="submit"
             size="large"
             disabled={loading}
-            sx={{ mt: 3 }}
+            startIcon={<PersonAddIcon />}
+            sx={{ mt: 3, py: 1.5 }}
           >
-            {loading ? "Creating Account..." : "Sign Up"}
+            {loading ? "Creating Account..." : "Create Account"}
           </Button>
         </Box>
-        <Typography variant="body2" sx={{ mt: 2, textAlign: "center" }}>
-          Already have an account? <Link to="/login">Sign In</Link>
+
+        <Typography variant="body2" align="center" sx={{ mt: 3 }} color="text.secondary">
+          Already have an account?{" "}
+          <Link to="/login" style={{ textDecoration: "none", color: "#3949ab", fontWeight: 600 }}>
+            Sign In
+          </Link>
         </Typography>
       </Paper>
     </AuthLayout>

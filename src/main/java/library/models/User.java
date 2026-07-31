@@ -60,8 +60,7 @@ public class User {
 
     @PrePersist
     private void onCreate() {
-        isActive = false;
         createdDate= LocalDate.now();
-        borrowedBookCount=0;
+        if (borrowedBookCount == null) borrowedBookCount = 0;
     }
 }

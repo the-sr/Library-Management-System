@@ -58,8 +58,8 @@ const VerifyOTP = () => {
 
   return (
     <AuthLayout>
-      <Paper elevation={3} sx={{ p: 4, width: "100%" }}>
-        <Typography variant="h4" align="center" gutterBottom>
+      <Paper elevation={0} sx={{ p: 4, width: "100%", border: "1px solid", borderColor: "grey.200" }}>
+        <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 700 }}>
           {mode === "reset" ? "Reset Password" : "Verify Account"}
         </Typography>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

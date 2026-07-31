@@ -90,7 +90,14 @@ const MyBorrowings = () => {
       {loading ? (
         <LoadingSpinner />
       ) : borrowings.length > 0 ? (
-        <TableContainer component={Paper}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            "& .MuiTableCell-root": { py: 1.5 },
+            "& .MuiTableRow-root:nth-of-type(odd)": { bgcolor: "grey.50" },
+            "& .MuiTableRow-root:hover": { bgcolor: "primary.main", color: "#fff", "& .MuiTableCell-root": { color: "#fff" } },
+          }}
+        >
           <Table>
             <TableHead>
               <TableRow>
@@ -106,24 +113,31 @@ const MyBorrowings = () => {
             <TableBody>
               {borrowings.map((b) => (
                 <TableRow key={b.id}>
-                  <TableCell>{b.book?.title || "Book"}</TableCell>
+                  <TableCell fontWeight={500}>{b.book?.title || "Book"}</TableCell>
                   <TableCell>{formatDate(b.borrowedDate)}</TableCell>
                   <TableCell>{formatDate(b.expectedReturnDate)}</TableCell>
                   <TableCell>{formatDate(b.returnDate)}</TableCell>
                   <TableCell>
-                    {b.fineAmount > 0 ? `$${b.fineAmount.toFixed(2)}` : "-"}
+                    {b.fineAmount > 0 ? (
+                      <Chip label={`$${b.fineAmount.toFixed(2)}`} color="error" size="small" sx={{ fontWeight: 600 }} />
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
                   <TableCell>
                     <Chip
                       label={b.requestType || "Active"}
                       color={statusColor(b)}
                       size="small"
+                      sx={{ fontWeight: 600 }}
                     />
                   </TableCell>
                   <TableCell align="right">
                     {!b.requestType && (
                       <Button
                         size="small"
+                        variant="contained"
+                        color="primary"
                         startIcon={<AssignmentReturnIcon />}
                         onClick={() => handleReturnRequest(b.id)}
                         sx={{ mr: 1 }}
@@ -134,6 +148,7 @@ const MyBorrowings = () => {
                     {b.requestType && (
                       <Button
                         size="small"
+                        variant="outlined"
                         color="error"
                         startIcon={<CancelIcon />}
                         onClick={() => {
@@ -151,7 +166,9 @@ const MyBorrowings = () => {
           </Table>
         </TableContainer>
       ) : (
-        <Typography color="text.secondary">No active borrowings</Typography>
+        <Paper sx={{ p: 6, textAlign: "center" }}>
+          <Typography color="text.secondary" variant="h6">No active borrowings</Typography>
+        </Paper>
       )}
 
       <ConfirmDialog

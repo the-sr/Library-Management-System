@@ -9,4 +9,6 @@ public interface FileService {
 
     Resource getFile(String fileName);
 
+    void deleteFile(String fileName);
+
 }

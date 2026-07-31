@@ -38,6 +38,12 @@ public class Book {
     @Column(name = "average_rating")
     private Float averageRating;
 
+    @Column(name = "images", columnDefinition = "TEXT")
+    private String images;
+
+    @Column(name = "pdf_path")
+    private String pdfPath;
+
     @OneToMany(mappedBy = "book",cascade = CascadeType.REMOVE)
     private List<BookAuthor> bookAuthor;
 

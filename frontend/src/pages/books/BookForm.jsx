@@ -17,8 +17,10 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import useUiStore from "../../stores/uiStore";
 import { addBook, updateBook, getBookById } from "../../api/books";
-import { getAllAuthors } from "../../api/authors";
+import { getAllAuthors, createAuthor } from "../../api/authors";
 import { getAllGenres } from "../../api/genres";
+import ImageUpload from "../../components/books/ImageUpload";
+import PdfUpload from "../../components/books/PdfUpload";
 
 const schema = z.object({
   isbn: z.string().min(1, "ISBN is required"),
@@ -39,6 +41,10 @@ const BookForm = () => {
   const [genres, setGenres] = useState([]);
   const [selectedAuthors, setSelectedAuthors] = useState([]);
   const [selectedGenres, setSelectedGenres] = useState([]);
+  const [pendingImage, setPendingImage] = useState(null);
+  const [pendingPdf, setPendingPdf] = useState(null);
+  const [existingImage, setExistingImage] = useState("");
+  const [existingPdf, setExistingPdf] = useState("");
 
   const {
     register,
@@ -72,6 +78,8 @@ const BookForm = () => {
           });
           setSelectedAuthors(book.authors || []);
           setSelectedGenres(book.genre || []);
+          setExistingImage(book.images?.[0] || "");
+          setExistingPdf(book.pdfPath || "");
         }
       } catch (err) {
         console.error(err);
@@ -79,6 +87,27 @@ const BookForm = () => {
     };
     loadFormData();
   }, [id, isEdit, reset]);
+
+  const handleAuthorChange = async (_, newValue) => {
+    const created = [];
+    for (const item of newValue) {
+      if (item.id) {
+        created.push(item);
+      } else {
+        try {
+          const parts = (typeof item === "string" ? item : item.firstName || "").trim().split(/\s+/);
+          const firstName = parts[0] || "";
+          const lastName = parts.slice(1).join(" ") || "";
+          const res = await createAuthor({ firstName, lastName });
+          created.push(res.data);
+        } catch (err) {
+          console.error("Failed to create author:", err);
+          showSnackbar("Failed to create author", "error");
+        }
+      }
+    }
+    setSelectedAuthors(created);
+  };
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -91,11 +120,14 @@ const BookForm = () => {
       };
       if (isEdit) {
         payload.id = parseInt(id);
-        await updateBook(payload);
+        await updateBook(payload, pendingImage, pendingPdf);
         showSnackbar("Book updated successfully", "success");
       } else {
-        await addBook(payload);
+        const res = await addBook(payload, pendingImage, pendingPdf);
+        const newId = res.data?.id || res.id;
         showSnackbar("Book added successfully", "success");
+        navigate(`/books/${newId}`);
+        return;
       }
       navigate("/books");
     } catch (err) {
@@ -104,6 +136,19 @@ const BookForm = () => {
       setLoading(false);
     }
   };
+
+  const handleImageChange = (file) => {
+    setPendingImage(file);
+    if (file) setExistingImage("");
+  };
+
+  const handlePdfChange = (file) => {
+    setPendingPdf(file);
+    if (file) setExistingPdf("");
+  };
+
+  const displayImage = pendingImage ? null : existingImage;
+  const displayPdf = pendingPdf ? null : existingPdf;
 
   return (
     <Box>
@@ -156,22 +201,31 @@ const BookForm = () => {
             <Grid item xs={12}>
               <Autocomplete
                 multiple
+                freeSolo
                 options={authors}
-                getOptionLabel={(option) => `${option.firstName} ${option.lastName}`}
+                getOptionLabel={(option) => {
+                  if (typeof option === "string") return option;
+                  return `${option.firstName} ${option.lastName}`;
+                }}
                 value={selectedAuthors}
-                onChange={(_, newValue) => setSelectedAuthors(newValue)}
+                onChange={handleAuthorChange}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => (
                     <Chip
                       variant="outlined"
-                      label={`${option.firstName} ${option.lastName}`}
+                      label={typeof option === "string" ? option : `${option.firstName} ${option.lastName}`}
                       {...getTagProps({ index })}
-                      key={option.id}
+                      key={option.id || index}
                     />
                   ))
                 }
                 renderInput={(params) => (
-                  <TextField {...params} variant="outlined" label="Authors" placeholder="Search authors..." />
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    label="Authors"
+                    placeholder="Type author name and press Enter..."
+                  />
                 )}
               />
             </Grid>
@@ -198,6 +252,11 @@ const BookForm = () => {
               />
             </Grid>
           </Grid>
+
+          <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
+            <ImageUpload image={displayImage} onImageChange={handleImageChange} />
+            <PdfUpload pdf={displayPdf} onPdfChange={handlePdfChange} />
+          </Box>
 
           <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
             <Button variant="contained" type="submit" disabled={loading}>

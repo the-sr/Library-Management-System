@@ -1,6 +1,5 @@
 package library.controller;
 
-import jakarta.validation.Valid;
 import library.dto.AuthorDto;
 import library.dto.BookDto;
 import library.dto.GenreDto;
@@ -10,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,9 +21,12 @@ public class BookController {
     private final BookService bookService;
 
     @PreAuthorize("hasAuthority('LIBRARIAN')")
-    @PostMapping("/add-book")
-    public ResponseEntity<?> addBook(@RequestBody BookDto req) {
-        return ResponseEntity.ok().body(bookService.add(req));
+    @PostMapping(value = "/add-book", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> addBook(
+            @RequestPart("book") BookDto req,
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestPart(value = "pdf", required = false) MultipartFile pdf) {
+        return ResponseEntity.ok().body(bookService.add(req, image, pdf));
     }
 
     @GetMapping("/book/{id}")
@@ -61,15 +64,30 @@ public class BookController {
     }
 
     @PreAuthorize("hasAuthority('LIBRARIAN')")
-    @PutMapping("/book")
-    public ResponseEntity<?> updateBook(@Valid @RequestBody BookDto req) {
-        return ResponseEntity.ok().body(bookService.updateById(req));
+    @PutMapping(value = "/book", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> updateBook(
+            @RequestPart("book") BookDto req,
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestPart(value = "pdf", required = false) MultipartFile pdf) {
+        return ResponseEntity.ok().body(bookService.updateById(req, image, pdf));
     }
 
     @PreAuthorize("hasAuthority('LIBRARIAN')")
     @DeleteMapping("book/{id}")
     public ResponseEntity<?> deleteBook(@PathVariable("id") long id) {
         return ResponseEntity.ok().body(bookService.removeById(id));
+    }
+
+    @PreAuthorize("hasAuthority('LIBRARIAN')")
+    @DeleteMapping("/book/{id}/image")
+    public ResponseEntity<?> removeImage(@PathVariable Long id) {
+        return ResponseEntity.ok().body(bookService.removeImage(id));
+    }
+
+    @PreAuthorize("hasAuthority('LIBRARIAN')")
+    @DeleteMapping("/book/{id}/pdf")
+    public ResponseEntity<?> removePdf(@PathVariable Long id) {
+        return ResponseEntity.ok().body(bookService.removePdf(id));
     }
 
     @PreAuthorize("hasAuthority('LIBRARIAN')")
