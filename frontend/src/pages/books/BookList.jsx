@@ -10,10 +10,6 @@ import {
   InputAdornment,
   Paper,
   Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  OutlinedInput,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
@@ -98,7 +94,7 @@ const BookList = () => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3, gap: 2 }}>
         <Typography variant="h4">Books</Typography>
         {(user?.role === "LIBRARIAN" || user?.role === "ADMIN") && (
           <Button
@@ -113,90 +109,80 @@ const BookList = () => {
       </Box>
 
       <Paper sx={{ p: 2, mb: 2 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={4} md={2}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Search By</InputLabel>
-              <Select
-                value={searchType}
-                label="Search By"
-                onChange={(e) => setSearchType(e.target.value)}
-              >
-                <MenuItem value="title">Title</MenuItem>
-                <MenuItem value="author">Author</MenuItem>
-                <MenuItem value="genre">Genre</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={8} md={3}>
-            <form onSubmit={handleSearch}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder={`Search by ${searchType}...`}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </form>
-          </Grid>
-          <Grid item xs={12} sm={4} md={4}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Genre</InputLabel>
-              <Select
-                value={selectedGenre}
-                label="Genre"
-                onChange={(e) => {
-                  setSelectedGenre(e.target.value);
-                  setSearch("");
-                  setPage(0);
-                }}
-              >
-                <MenuItem value="">All Genres</MenuItem>
-                {genres.map((g) => (
-                  <MenuItem key={g.id} value={g.name}>
-                    {g.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6} sm={3} md={1.5}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Sort By</InputLabel>
-              <Select
-                value={sortBy}
-                label="Sort By"
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <MenuItem value="id">ID</MenuItem>
-                <MenuItem value="title">Title</MenuItem>
-                <MenuItem value="averageRating">Rating</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6} sm={3} md={1.5}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Direction</InputLabel>
-              <Select
-                value={sortDirection}
-                label="Direction"
-                onChange={(e) => setSortDirection(e.target.value)}
-              >
-                <MenuItem value="asc">Ascending</MenuItem>
-                <MenuItem value="desc">Descending</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, alignItems: "center" }}>
+          <TextField
+            select
+            size="small"
+            label="Search By"
+            value={searchType}
+            onChange={(e) => setSearchType(e.target.value)}
+            sx={{ minWidth: 130, flex: "0 0 auto" }}
+          >
+            <MenuItem value="title">Title</MenuItem>
+            <MenuItem value="author">Author</MenuItem>
+            <MenuItem value="genre">Genre</MenuItem>
+          </TextField>
+          <form onSubmit={handleSearch} style={{ flex: "1 1 200px", minWidth: 200 }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder={`Search by ${searchType}...`}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </form>
+          <TextField
+            select
+            size="small"
+            label="Genre"
+            value={selectedGenre}
+            onChange={(e) => {
+              setSelectedGenre(e.target.value);
+              setSearch("");
+              setPage(0);
+            }}
+            sx={{ minWidth: 150, flex: "1 1 150px" }}
+          >
+            <MenuItem value="">All Genres</MenuItem>
+            {genres.map((g) => (
+              <MenuItem key={g.id} value={g.name}>
+                {g.name}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            size="small"
+            label="Sort By"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            sx={{ minWidth: 130, flex: "0 0 auto" }}
+          >
+            <MenuItem value="id">ID</MenuItem>
+            <MenuItem value="title">Title</MenuItem>
+            <MenuItem value="averageRating">Rating</MenuItem>
+          </TextField>
+          <TextField
+            select
+            size="small"
+            label="Direction"
+            value={sortDirection}
+            onChange={(e) => setSortDirection(e.target.value)}
+            sx={{ minWidth: 150, flex: "0 0 auto" }}
+          >
+            <MenuItem value="asc">Ascending</MenuItem>
+            <MenuItem value="desc">Descending</MenuItem>
+          </TextField>
+        </Box>
         {hasFilters && (
-          <Box sx={{ mt: 1, display: "flex", gap: 1, alignItems: "center" }}>
+          <Box sx={{ mt: 1.5, display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
             <FilterListIcon fontSize="small" color="action" />
             <Typography variant="body2" color="text.secondary">Active filters:</Typography>
             {search && (
